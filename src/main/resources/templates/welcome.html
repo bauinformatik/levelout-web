@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Spring Boot Thymeleaf Hello World Example</title>
+
+    <link rel="stylesheet" th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+<script>  
+function hello(user){  
+	alert("hello "+user);  
+}  
+</script>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a target="_blank" class="navbar-brand" href="https://www.uni-weimar.de/en/university/start/">Bauhaus-Universität Weimar</a>
+</nav>
+
+<main role="main" class="container">
+
+    <div class="starter-template">
+        <h1>Upload/Download BIM/IFC Files</h1>
+        <h2>
+            <span th:text="'Hello, ' + ${message}"></span>
+        </h2>
+    </div>
+
+	<table>
+		<tr>
+			<th>ID</th>
+		    <th>Project Name</th>
+		    <th>Project Author</th>
+		    <th>Actions</th>
+		</tr>
+		<tr th:each="project: ${projects}">
+		    <td th:text="${project.id}" />
+		    <td th:text="${project.name}" />
+		    <td th:text="${project.author}" />
+		    <td>
+		    	<button name="button" value="OK" type="button" th:attr="onclick=|hello('${message}')|">Click Here</button>
+		    </td>
+		</tr>
+	</table>
+
+</main>
+<!-- /.container -->
+
+<script type="text/javascript" th:src="@{webjars/bootstrap/4.2.1/js/bootstrap.min.js}"></script>
+</body>
+</html>
