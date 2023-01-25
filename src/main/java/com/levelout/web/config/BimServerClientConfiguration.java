@@ -1,4 +1,4 @@
-package com.levelout.config;
+package com.levelout.web.config;
 
 import java.io.File;
 import java.net.MalformedURLException;

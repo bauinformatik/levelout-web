@@ -17,19 +17,19 @@ public class UploadController {
     BimClientService bimClientService;
 
 	@PostMapping(value = "/bim", consumes = { MediaType.APPLICATION_JSON_VALUE,MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity update(@RequestPart UploadRequest uploadRequest, @RequestPart MultipartFile bimFile) {
+    public ResponseEntity<?> update(@RequestPart UploadRequest uploadRequest, @RequestPart MultipartFile bimFile) {
         bimClientService.updateForPid(uploadRequest, bimFile);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping(value = "/bim", consumes = { MediaType.APPLICATION_JSON_VALUE,MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity create(@RequestPart UploadRequest uploadRequest, @RequestPart MultipartFile bimFile) {
+    public ResponseEntity<?> create(@RequestPart UploadRequest uploadRequest, @RequestPart MultipartFile bimFile) {
         bimClientService.uploadNew(bimFile);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/bim/{pid}")
-    public ResponseEntity delete(@PathParam("pid") long pid) {
+    public ResponseEntity<?> delete(@PathParam("pid") long pid) {
         bimClientService.deleteForPid(pid);
         return ResponseEntity.ok().build();
     }
