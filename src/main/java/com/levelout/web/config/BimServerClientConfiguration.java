@@ -20,39 +20,43 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BimServerClientConfiguration {
 
-    final static Log logger = LogFactory.getLog(BimServerClientConfiguration.class);
-    @Value("${bimserver.host}")
-    String host;
+	final static Log logger = LogFactory.getLog(BimServerClientConfiguration.class);
+	@Value("${bimserver.host}")
+	String host;
 
-    @Value("${bimserver.user}")
-    String user;
+	@Value("${bimserver.user}")
+	String user;
 
-    @Value("${bimserver.password}")
-    String password;
+	@Value("${bimserver.password}")
+	String password;
 
-    @Value("${bimserver.certificate:#{null}}")
-    String certificate;
+	@Value("${bimserver.certificate:#{null}}")
+	String certificate;
 
-    @Bean
-    public JsonBimServerClientFactory bimServerClientFactory() throws MalformedURLException, BimServerClientException, ServiceException, ChannelConnectionException {
-        logger.debug("Creating instance of BimServerClientFactory for host: " + host);
-        JsonBimServerClientFactory factory;
-        if(certificate==null || certificate.isEmpty()) {
-            factory = new JsonBimServerClientFactory(host);
-        } else {
-            File trustedCert = new File(certificate);
-            URL trustedCertificate = trustedCert.exists() ? trustedCert.toURI().toURL() : getClass().getClassLoader().getResource(certificate);
-            factory = new JsonBimServerClientFactory(host, trustedCertificate);
-        }
-        logger.debug("Created instance of BimServerClientFactory for host: " + host);
-        return factory;
-    }
+	@Bean
+	public JsonBimServerClientFactory bimServerClientFactory()
+			throws MalformedURLException, BimServerClientException, ServiceException, ChannelConnectionException {
+		logger.debug("Creating instance of BimServerClientFactory for host: " + host);
+		JsonBimServerClientFactory factory;
+		if (certificate == null || certificate.isEmpty()) {
+			factory = new JsonBimServerClientFactory(host);
+		} else {
+			File trustedCert = new File(certificate);
+			URL trustedCertificate = trustedCert.exists() ? trustedCert.toURI().toURL()
+					: getClass().getClassLoader().getResource(certificate);
+			factory = new JsonBimServerClientFactory(host, trustedCertificate);
+		}
+		logger.debug("Created instance of BimServerClientFactory for host: " + host);
+		return factory;
+	}
 
-    @Bean
-    public BimServerClient bimServerClient(@Qualifier("bimServerClientFactory") JsonBimServerClientFactory bimServerClientFactory) throws MalformedURLException, BimServerClientException, ServiceException, ChannelConnectionException {
-        logger.debug("Creating BIM client for host: " + host);
-        BimServerClient client = bimServerClientFactory.create(new UsernamePasswordAuthenticationInfo(user, password));
-        logger.debug("Successfully Created BIM client for the host: " + host);
-        return client;
-    }
+	@Bean
+	public BimServerClient bimServerClient(
+			@Qualifier("bimServerClientFactory") JsonBimServerClientFactory bimServerClientFactory)
+			throws MalformedURLException, BimServerClientException, ServiceException, ChannelConnectionException {
+		logger.debug("Creating BIM client for host: " + host);
+		BimServerClient client = bimServerClientFactory.create(new UsernamePasswordAuthenticationInfo(user, password));
+		logger.debug("Successfully Created BIM client for the host: " + host);
+		return client;
+	}
 }

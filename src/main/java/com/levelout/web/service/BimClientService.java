@@ -19,27 +19,25 @@ public class BimClientService {
 	@Autowired
 	BimServerClient bimServerClient;
 
-    @Async
-    public void updateForPid(UploadRequest uploadRequest, MultipartFile bimFile) {
-        try {
-            bimServerClient.checkin(
-                    uploadRequest.getPoid(), uploadRequest.getComment(), uploadRequest.getOid(), bimFile.getSize(),
-                    bimFile.getName(), bimFile.getInputStream(), (title, progress) -> {
-                        //ToDo: Save the status of the check-in/upload Percentage
-                    }
-            );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (UserException e) {
-            throw new RuntimeException(e);
-        } catch (ServerException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	@Async
+	public void updateForPid(UploadRequest uploadRequest, MultipartFile bimFile) {
+		try {
+			bimServerClient.checkin(uploadRequest.getPoid(), uploadRequest.getComment(), uploadRequest.getOid(),
+					bimFile.getSize(), bimFile.getName(), bimFile.getInputStream(), (title, progress) -> {
+						// ToDo: Save the status of the check-in/upload Percentage
+					});
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} catch (UserException e) {
+			throw new RuntimeException(e);
+		} catch (ServerException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    public void uploadNew(MultipartFile bimFile) {
-    }
+	public void uploadNew(MultipartFile bimFile) {
+	}
 
-    public void deleteForPid(long pid) {
-    }
+	public void deleteForPid(long pid) {
+	}
 }
