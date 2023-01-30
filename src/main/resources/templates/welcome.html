@@ -11,10 +11,47 @@
 	th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
 <link rel="stylesheet" th:href="@{/css/main.css}" />
 <script>
-	function hello(user) {
-		alert("hello " + user);
+	function update(data) {
+		console.log("Inside Update");
+		console.log(data)
+		console.log(": "+data.percentage);
+		console.log("progress_"+data.projectId);
+		var element = document.getElementById("progress_"+data.projectId);
+		fetch("/process/status/"+data.projectId+"/"+data.topicId, {
+			method: "get"
+		})
+		.then(function(response) {
+		  response.json().then(function(json){
+		  	if (json.percentage >= 100) {
+				alert("Finished Uploading")
+			} else {
+				console.log(json);
+				element.style.width = json.percentage * 1 + '%';
+				element.innerHTML = json.percentage * 1  + '%';
+				update(json);
+			}
+		  });
+		}).catch(err => console.error(err));
 	}
-</script>
+	function hello(projectId) {
+		const inputFile = document.getElementById("file_"+projectId);
+		const formData = new FormData();
+		for (const file of inputFile.files) {
+			formData.append("file", file);
+		}
+		fetch("/process/checkIn/"+projectId, {
+			method: "post",
+			body: formData
+		})
+		.then(function(response) {
+		  // response.json() returns a promise, use the same .then syntax to work with the results
+		  response.json().then(function(json){
+			console.log(": "+json.percentage);
+			update(json);
+		  });
+		}).catch(err => console.error(err));
+	}
+	</script>
 </head>
 
 <body>
@@ -38,16 +75,21 @@
 			<tr>
 				<th>ID</th>
 				<th>Project Name</th>
-				<th>Project Author</th>
+				<th>Project Description</th>
 				<th>Actions</th>
 			</tr>
 			<tr th:each="project: ${projects}">
-				<td th:text="${project.id}" />
+				<td th:text="${project.projectId}" />
 				<td th:text="${project.name}" />
-				<td th:text="${project.author}" />
+				<td th:text="${project.description}" />
 				<td>
+				 	<input th:attr="id=|file_${project.projectId}|" type="file"/>
 					<button name="button" value="OK" type="button"
-						th:attr="onclick=|hello('${message}')|">Click Here</button>
+						th:attr="onclick=|hello('${project.projectId}')|">UPLOAD</button>
+					
+					<div id="Progress_Status" class="progress_status">
+					  <div th:attr="id=|progress_${project.projectId}|" class="progress"></div>
+					</div>
 				</td>
 			</tr>
 		</table>

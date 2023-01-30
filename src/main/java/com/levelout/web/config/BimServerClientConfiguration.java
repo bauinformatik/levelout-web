@@ -35,7 +35,7 @@ public class BimServerClientConfiguration {
 
 	@Bean
 	public JsonBimServerClientFactory bimServerClientFactory()
-			throws MalformedURLException, BimServerClientException, ServiceException, ChannelConnectionException {
+			throws MalformedURLException, BimServerClientException {
 		logger.debug("Creating instance of BimServerClientFactory for host: " + host);
 		JsonBimServerClientFactory factory;
 		if (certificate == null || certificate.isEmpty()) {
@@ -53,7 +53,7 @@ public class BimServerClientConfiguration {
 	@Bean
 	public BimServerClient bimServerClient(
 			@Qualifier("bimServerClientFactory") JsonBimServerClientFactory bimServerClientFactory)
-			throws MalformedURLException, BimServerClientException, ServiceException, ChannelConnectionException {
+			throws ServiceException, ChannelConnectionException {
 		logger.debug("Creating BIM client for host: " + host);
 		BimServerClient client = bimServerClientFactory.create(new UsernamePasswordAuthenticationInfo(user, password));
 		logger.debug("Successfully Created BIM client for the host: " + host);
