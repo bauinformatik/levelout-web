@@ -32,7 +32,7 @@ spring.servlet.multipart.max-file-size=2050MB
 spring.servlet.multipart.max-request-size=2050MB
 ```
 2. You can edit spring properties as needed. Refer various Reference Documentation for the same
-3. Download the latest jar from [here](https://github.com/bauinformatik/levelout-web)
+3. Download the latest jar from [here](https://github.com/bauinformatik/levelout-web/releases)
 4. Run the jar with the command. Refer example below
 ```
 java -jar levelout-web-0.0.1-SNAPSHOT.jar --spring.config.location=file:///F:/Code/bauhaus/levelout-web-jar/properties_file/depth/application.properties
