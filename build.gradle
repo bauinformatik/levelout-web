@@ -8,6 +8,12 @@ group = 'com.levelout'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
+jar {
+	manifest {
+		attributes 'Main-Class': 'com.levelout.web.LeveloutWebApplication'
+	}
+}
+
 repositories {
 	mavenCentral()
 	maven { url 'https://repo.spring.io/milestone' }
