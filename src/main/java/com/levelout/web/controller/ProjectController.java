@@ -31,15 +31,15 @@ public class ProjectController {
     }
 
     @PutMapping(value = "/project")
-    public ResponseEntity<String> create(@RequestBody ProjectDto projectDto) throws Exception {
+    public ResponseEntity<ProjectDto> create(@RequestBody ProjectDto projectDto) throws Exception {
         projectService.createProject(projectDto);
-        return ResponseEntity.ok(CommonConstants.SUCCESS);
+        return ResponseEntity.ok(projectDto);
     }
 
 	@PostMapping(value = "/project")
-    public ResponseEntity<String> update(@RequestBody ProjectDto projectDto) throws Exception {
+    public ResponseEntity<ProjectDto> update(@RequestBody ProjectDto projectDto) throws Exception {
         projectService.updateProject(projectDto);
-        return ResponseEntity.ok(CommonConstants.SUCCESS);
+        return ResponseEntity.ok(projectDto);
     }
 
     @DeleteMapping("/project")

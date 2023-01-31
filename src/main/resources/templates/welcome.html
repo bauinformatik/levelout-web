@@ -11,6 +11,35 @@
 	th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
 <link rel="stylesheet" th:href="@{/css/main.css}" />
 <script>
+	async function addProject() {
+		var name = document.getElementById('projectName').value
+		var schema = document.getElementById('projectSchema').value
+		var exportLengthMeasurePrefix = document.getElementById('projectMeasurePrefix').value
+		var description = document.getElementById('projectDescription').value
+
+		const response = await fetch("/project", {
+			  method: 'PUT',
+			  body: JSON.stringify({
+				name:name,
+				schema:schema,
+				exportLengthMeasurePrefix:exportLengthMeasurePrefix,
+				description:description
+	    	  }),
+			  headers: {
+				'Content-type': 'application/json; charset=UTF-8',
+			  }
+	    })
+	}
+
+	function showHideProjectForm(show) {
+		if(show) {
+			document.getElementById('projectForm').style.display="block"
+		}
+		else {
+			document.getElementById('projectForm').style.display="none"
+		}
+	}
+
 	function update(data) {
 		var element = document.getElementById("progress_"+data.projectId);
 		element.style.display = "block";
@@ -57,47 +86,62 @@
 </head>
 
 <body>
+	<p>
+		<button class="button" onclick="window.open('https://www.uni-weimar.de/en/university/start/','_blank')">
+			Bauhaus-Universität Weimar
+		</button>
+	</p>
 
-	<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-		<a target="_blank" class="navbar-brand"
-			href="https://www.uni-weimar.de/en/university/start/">Bauhaus-Universität
-			Weimar</a>
-	</nav>
-
-	<main role="main" class="container">
-
-		<div class="starter-template">
-			<h1>Upload IFC Files</h1>
-			<h2>
-				<span th:text="'Hello, ' + ${message}"></span>
-			</h2>
-		</div>
-
-		<table>
-			<tr>
-				<th>ID</th>
-				<th>Project Name</th>
-				<th>Project Description</th>
-				<th>Actions</th>
-			</tr>
-			<tr th:each="project: ${projects}">
-				<td th:text="${project.projectId}" />
-				<td th:text="${project.name}" />
-				<td th:text="${project.description}" />
-				<td>
-				 	<input th:attr="id=|file_${project.projectId}|" type="file"/>
-					<button name="button" value="OK" type="button"
+	<div class="starter-template">
+		<h1>Upload IFC Files</h1>
+		<h2>
+			<span th:text="'Hello, ' + ${message}"></span>
+		</h2>
+	</div>
+	<button onclick="showHideProjectForm(true)">Add Project</button>
+	<table>
+		<tr>
+			<th>ID</th>
+			<th>Project Name</th>
+			<th>Project Description</th>
+			<th>Actions</th>
+		</tr>
+		<tr th:each="project: ${projects}">
+			<td th:text="${project.projectId}" />
+			<td th:text="${project.name}" />
+			<td th:text="${project.description}" />
+			<td>
+				<input th:attr="id=|file_${project.projectId}|" type="file"/>
+				<button name="button" value="OK" type="button"
 						th:attr="onclick=|hello('${project.projectId}')|">UPLOAD</button>
-					
-					<div th:attr="id=|progress_status_${project.projectId}|" class="progress_status">
-					  <div th:attr="id=|progress_${project.projectId}|" class="progress"></div>
-					</div>
-				</td>
-			</tr>
-		</table>
 
-	</main>
-	<!-- /.container -->
+				<div th:attr="id=|progress_status_${project.projectId}|" class="progress_status">
+					<div th:attr="id=|progress_${project.projectId}|" class="progress"></div>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+	<div id="projectForm" class="modal">
+		<div class="modal-content">
+			<div class="contact-form">
+				<a class="close" onclick="showHideProjectForm(false)">&times;</a>
+				<form action="/">
+					<h2>Add Project</h2>
+					<div>
+						<input class="fname" type="text" id="projectName" placeholder="Project name" />
+						<input type="text" id="projectSchema" placeholder="Schema (ifc2x3tc1 or ifc4)" />
+						<input type="text" id="projectMeasurePrefix" placeholder="Export Measurement Prefix" />
+					</div>
+					<span>Description</span>
+					<div>
+						<textarea id="projectDescription" rows="4"></textarea>
+					</div>
+					<button onclick="addProject()">Submit</button>
+				</form>
+			</div>
+		</div>
+	</div>
 
 	<script type="text/javascript"
 		th:src="@{webjars/bootstrap/4.2.1/js/bootstrap.min.js}"></script>

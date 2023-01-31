@@ -26,18 +26,24 @@ public class ProjectService {
 	BimServerClient bimServerClient;
 
 	public void createProject(ProjectDto projectDto) throws ServerException, UserException {
-		bimServerClient.getServiceInterface().addProject(
+		SProject project = bimServerClient.getServiceInterface().addProject(
 				projectDto.getName(),
 				projectDto.getSchema().name()
 		);
+		projectDto.setProjectId(project.getOid());
+		updateProjectDetails(projectDto, project);
 	}
 
 	public void updateProject(ProjectDto projectDto) throws ServerException, UserException {
 		SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectDto.getProjectId());
+		updateProjectDetails(projectDto, project);
+	}
+
+	private void updateProjectDetails(ProjectDto projectDto, SProject project) throws ServerException, UserException {
 		project.setName(projectDto.getName());
-		project.setDescription(projectDto.getDescription());
-		project.setExportLengthMeasurePrefix(projectDto.getExportLengthMeasurePrefix());
 		project.setSchema(projectDto.getSchema().name());
+		project.setExportLengthMeasurePrefix(projectDto.getExportLengthMeasurePrefix());
+		project.setDescription(projectDto.getDescription());
 		bimServerClient.getServiceInterface().updateProject(project);
 	}
 
