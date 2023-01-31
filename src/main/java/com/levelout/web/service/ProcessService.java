@@ -27,37 +27,57 @@ public class ProcessService {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
         SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
+        logger.info("CheckIn Process Initialized");
         asyncProcessService.checkInAsync(projectId, bimFile, pluginConfig, project, topicId);
-        return mapToProcessDto(projectId, topicId, 0);
+        logger.info("CheckIn Process Started");
+        return getProcessStatus(projectId, topicId);
     }
 
-    public ProcessDto getProcessStatus(long projectId, long topicId) {
-        class MyProgressHandler implements ProgressHandler {
-            private int progress=-1000;
-            @Override
-            public void progress(SLongActionState state) {
-                progress = state.getProgress();
-            }
-            public int getProgress() {
-                return progress;
-            }
-        }
+    public ProcessDto getProcessStatus(long projectId, long topicId) throws ServerException, UserException {
         MyProgressHandler progressHandler = new MyProgressHandler();
         bimServerClient.getNotificationsManager().registerProgressHandler(topicId, progressHandler);
-        while(progressHandler.getProgress()==-1000) {
-
+        final SLongActionState state = getActionState(progressHandler);
+        if(state.getProgress()>=100 && state.getState()==SActionState.FINISHED) {
+            bimServerClient.getServiceInterface().cleanupLongAction(topicId);
         }
         bimServerClient.getNotificationsManager().unregisterProgressHandler(topicId, progressHandler);
-        return mapToProcessDto(projectId, topicId, progressHandler.getProgress());
+        return mapToProcessDto(projectId, topicId, state);
     }
 
-    private ProcessDto mapToProcessDto(long projectId, long topicId, int progress) {
+    private SLongActionState getActionState(MyProgressHandler progressHandler) {
+        while(progressHandler.getState() ==null) {
+
+        }
+        // Don't Move next line above the while loop. It will assign null to progress always
+        final SLongActionState state = progressHandler.getState();
+        return state;
+    }
+
+    public void getProgress(Long projectId) throws Exception {
+        SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
+        bimServerClient.getServiceInterface().cleanupLongAction(project.getLastRevisionId());
+    }
+
+    private ProcessDto mapToProcessDto(long projectId, long topicId, SLongActionState progress) {
         ProcessDto process = new ProcessDto();
         process.setProjectId(projectId);
         process.setProcessStatusType(ProcessStatusType.IN_PROGRESS);
         process.setProcessType(ProcessType.CHECK_IN);
         process.setTopicId(topicId);
-        process.setPercentage(progress);
+        process.setPercentage(progress.getProgress());
+        process.setActionState(progress.getState());
+        process.setTitle(progress.getTitle());
         return process;
+    }
+
+    class MyProgressHandler implements ProgressHandler {
+        private SLongActionState state =null;
+        @Override
+        public void progress(SLongActionState state) {
+            this.state = state;
+        }
+        public SLongActionState getState() {
+            return state;
+        }
     }
 }

@@ -20,6 +20,7 @@ public class ProcessController {
     public ResponseEntity<ProcessDto> checkIn(
             @PathVariable long projectId, @RequestParam MultipartFile file
     ) throws Exception {
+        logger.info("CheckIn process about to start for projectId: "+projectId);
         return ResponseEntity.ok(processService.checkIn(projectId, file));
     }
 
@@ -29,24 +30,20 @@ public class ProcessController {
     ) throws Exception {
         return ResponseEntity.ok(processService.getProcessStatus(projectId, topicId));
     }
-//
-//    /**
-//     * Location to save uploaded files on server
-//     */
-//    private static String UPLOAD_PATH = "F:\\data\\test\\upload";
-//    @PostMapping("/api/fileupload")
-//    public void uploadFile(@RequestParam("multipartFile") MultipartFile uploadfile) {
-//
-//        if (uploadfile.isEmpty()) {
-//            System.out.println("please select a file!");
-//        }
-//
-//        try {
-//            byte[] bytes = uploadfile.getBytes();
-//            Path path = Path.of(UPLOAD_PATH, uploadfile.getOriginalFilename());
-//            Files.write(path, bytes);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+
+    @GetMapping("/process/progress/{projectId}")
+    public ResponseEntity<String> getProcessTopicsForProject(
+            @PathVariable long projectId, @PathVariable long topicId
+    ) throws Exception {
+        processService.getProgress(projectId);
+        return ResponseEntity.ok(CommonConstants.SUCCESS);
+    }
+
+    @GetMapping("/process/progress")
+    public ResponseEntity<String> getAllProcessTopics(
+            @PathVariable long projectId, @PathVariable long topicId
+    ) throws Exception {
+        processService.getProgress(projectId);
+        return ResponseEntity.ok(CommonConstants.SUCCESS);
+    }
 }

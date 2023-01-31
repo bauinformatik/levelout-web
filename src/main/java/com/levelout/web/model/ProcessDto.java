@@ -2,13 +2,16 @@ package com.levelout.web.model;
 
 import com.levelout.web.enums.ProcessStatusType;
 import com.levelout.web.enums.ProcessType;
+import org.bimserver.interfaces.objects.SActionState;
 
 public class ProcessDto {
     long projectId;
+    String title;
     long topicId;
     long deserializerOid;
     ProcessType processType;
     ProcessStatusType processStatusType;
+    SActionState actionState;
     int percentage=0;
 
     public long getProjectId() {
@@ -17,6 +20,14 @@ public class ProcessDto {
 
     public void setProjectId(long projectId) {
         this.projectId = projectId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public long getTopicId() {
@@ -49,6 +60,14 @@ public class ProcessDto {
 
     public void setProcessStatusType(ProcessStatusType processStatusType) {
         this.processStatusType = processStatusType;
+    }
+
+    public SActionState getActionState() {
+        return actionState;
+    }
+
+    public void setActionState(SActionState actionState) {
+        this.actionState = actionState;
     }
 
     public int getPercentage() {

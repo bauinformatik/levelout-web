@@ -12,22 +12,24 @@
 <link rel="stylesheet" th:href="@{/css/main.css}" />
 <script>
 	function update(data) {
-		console.log("Inside Update");
-		console.log(data)
-		console.log(": "+data.percentage);
-		console.log("progress_"+data.projectId);
 		var element = document.getElementById("progress_"+data.projectId);
+		element.style.display = "block";
 		fetch("/process/status/"+data.projectId+"/"+data.topicId, {
 			method: "get"
 		})
 		.then(function(response) {
 		  response.json().then(function(json){
-		  	if (json.percentage >= 100) {
-				alert("Finished Uploading")
+		  	if (json.percentage >= 100 && json.actionState.toString() == "FINISHED") {
+				element.style.width =  "100%";
+				element.innerHTML = json.title + ":" + "100%";
+				setTimeout(function(){
+					alert("Finished Uploading");
+					element.style.display = "none";
+				},1000);
 			} else {
 				console.log(json);
-				element.style.width = json.percentage * 1 + '%';
-				element.innerHTML = json.percentage * 1  + '%';
+				element.style.width = json.percentage * 1 + "%";
+				element.innerHTML = json.title + ":" + json.percentage  + "%";
 				update(json);
 			}
 		  });
@@ -87,7 +89,7 @@
 					<button name="button" value="OK" type="button"
 						th:attr="onclick=|hello('${project.projectId}')|">UPLOAD</button>
 					
-					<div id="Progress_Status" class="progress_status">
+					<div th:attr="id=|progress_status_${project.projectId}|" class="progress_status">
 					  <div th:attr="id=|progress_${project.projectId}|" class="progress"></div>
 					</div>
 				</td>
