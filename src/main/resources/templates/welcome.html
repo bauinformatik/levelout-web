@@ -98,7 +98,16 @@
 			<span th:text="'Hello, ' + ${message}"></span>
 		</h2>
 	</div>
-	<button onclick="showHideProjectForm(true)">Add Project</button>
+<!--	<button onclick="showHideProjectForm(true)">Add Project</button>-->
+	<div>
+		<input th:attr="id=|file_0|" type="file"/>
+		<button name="button" value="OK" type="button"
+				th:attr="onclick=|hello('0')|">UPLOAD</button>
+
+		<div th:attr="id=|progress_status_0|" class="progress_status">
+			<div th:attr="id=|progress_0|" class="progress"></div>
+		</div>
+	</div>
 	<table>
 		<tr>
 			<th>ID</th>

@@ -23,29 +23,37 @@ public class ProcessService {
     @Autowired
     AsyncProcessService asyncProcessService;
 
-    public ProcessDto checkIn(long projectId, MultipartFile bimFile) throws Exception {
+    public ProcessDto checkIn(long projectId, MultipartFile bimFile, boolean isNew) throws Exception {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
         SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
         logger.info("CheckIn Process Initialized");
-        asyncProcessService.checkInAsync(projectId, bimFile, pluginConfig, project, topicId);
+        asyncProcessService.checkInAsync(projectId, bimFile, pluginConfig, project, topicId, isNew);
+
+        while (asyncProcessService.getMyProgressHandler(isNew?0:projectId)==null)
+            Thread.sleep(1000);
+
         logger.info("CheckIn Process Started");
         return getProcessStatus(projectId, topicId);
     }
 
+//    public ProcessDto getProcessStatus(long projectId, long topicId) throws ServerException, UserException {
+//        MyProgressHandler progressHandler = new MyProgressHandler();
+//        bimServerClient.getNotificationsManager().registerProgressHandler(topicId, progressHandler);
+//        final SLongActionState state = getActionState(progressHandler);
+//        if(state.getProgress()>=100 && state.getState()==SActionState.FINISHED) {
+//            bimServerClient.getServiceInterface().cleanupLongAction(topicId);
+//        }
+//        bimServerClient.getNotificationsManager().unregisterProgressHandler(topicId, progressHandler);
+//        return mapToProcessDto(projectId, topicId, state);
+//    }
+
     public ProcessDto getProcessStatus(long projectId, long topicId) throws ServerException, UserException {
-        MyProgressHandler progressHandler = new MyProgressHandler();
-        bimServerClient.getNotificationsManager().registerProgressHandler(topicId, progressHandler);
-        final SLongActionState state = getActionState(progressHandler);
-        if(state.getProgress()>=100 && state.getState()==SActionState.FINISHED) {
-            bimServerClient.getServiceInterface().cleanupLongAction(topicId);
-        }
-        bimServerClient.getNotificationsManager().unregisterProgressHandler(topicId, progressHandler);
-        return mapToProcessDto(projectId, topicId, state);
+        return asyncProcessService.getProgressHandler(projectId, topicId);
     }
 
     private SLongActionState getActionState(MyProgressHandler progressHandler) {
-        while(progressHandler.getState() ==null) {
+        while(progressHandler.getState() == null) {
 
         }
         // Don't Move next line above the while loop. It will assign null to progress always
