@@ -29,7 +29,6 @@ public class ProcessService {
         logger.info("CheckIn Process Prepared");
         asyncCheckinService.checkInAsync(projectId, bimFile, pluginConfig, project, topicId, isNew);
         logger.info("CheckIn Process Added to Queue");
-        Thread.sleep(1000);
         return getProcessStatus(projectId, topicId);
     }
 
