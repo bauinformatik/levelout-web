@@ -30,7 +30,7 @@ public class ProcessService {
         asyncCheckinService.checkInAsync(projectId, bimFile, pluginConfig, project, topicId, isNew);
         logger.info("CheckIn Process Added to Queue");
         Thread.sleep(1000);
-        return mapToProcessDto(projectId, topicId, null);
+        return getProcessStatus(projectId, topicId);
     }
 
     public ProcessDto getProcessStatus(long projectId, long topicId) throws ServerException, UserException, InterruptedException {
