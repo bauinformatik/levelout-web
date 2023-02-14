@@ -31,6 +31,10 @@
 	    })
 	}
 
+    function refreshPage(){
+        window.location.reload();
+    }
+
 	function showHideProjectForm(show) {
 		if(show) {
 			document.getElementById('projectForm').style.display="block"
@@ -40,8 +44,8 @@
 		}
 	}
 
-	function update(data) {
-		var element = document.getElementById("progress_"+data.projectId);
+	function update(data, elementId_suffix) {
+		var element = document.getElementById("progress_"+elementId_suffix);
 		element.style.display = "block";
 		fetch("/process/status/"+data.projectId+"/"+data.topicId, {
 			method: "get"
@@ -49,17 +53,19 @@
 		.then(function(response) {
 		  response.json().then(function(json){
 		  	if (json.percentage >= 100 && json.actionState.toString() == "FINISHED") {
+				console.log(json);
 				element.style.width =  "100%";
 				element.innerHTML = json.title + ":" + "100%";
 				setTimeout(function(){
 					alert("Finished Uploading");
 					element.style.display = "none";
+					refreshPage();
 				},1000);
 			} else {
 				console.log(json);
 				element.style.width = json.percentage * 1 + "%";
 				element.innerHTML = json.title + ":" + json.percentage  + "%";
-				update(json);
+				update(json, elementId_suffix);
 			}
 		  });
 		}).catch(err => console.error(err));
@@ -78,7 +84,7 @@
 		  // response.json() returns a promise, use the same .then syntax to work with the results
 		  response.json().then(function(json){
 			console.log(": "+json.percentage);
-			update(json);
+			update(json, projectId);
 		  });
 		}).catch(err => console.error(err));
 	}
@@ -100,7 +106,7 @@
 	</div>
 <!--	<button onclick="showHideProjectForm(true)">Add Project</button>-->
 	<div>
-		<input th:attr="id=|file_0|" type="file"/>
+        <input th:attr="id=|file_0|" type="file"/>
 		<button name="button" value="OK" type="button"
 				th:attr="onclick=|hello('0')|">UPLOAD</button>
 

@@ -6,6 +6,8 @@ import com.levelout.web.model.ProcessDto;
 import com.levelout.web.model.ProjectDto;
 import com.levelout.web.service.ProcessService;
 import com.levelout.web.service.ProjectService;
+import com.levelout.web.utils.DateTimeUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.SSIPrefix;
@@ -27,18 +29,30 @@ public class ProcessController {
     public ResponseEntity<ProcessDto> checkIn(
             @PathVariable long projectId, @RequestParam MultipartFile file
     ) throws Exception {
+        return checkInForSchema(projectId, file, IfcSchema.ifc4);
+    }
+
+    @PostMapping("/process/checkIn/{projectId}/{schema}")
+    public ResponseEntity<ProcessDto> checkIn(
+            @PathVariable long projectId, @PathVariable IfcSchema schema, @RequestParam MultipartFile file
+    ) throws Exception {
+        return checkInForSchema(projectId, file, schema);
+    }
+
+    private ResponseEntity<ProcessDto> checkInForSchema(long projectId, MultipartFile file, IfcSchema schema) throws Exception {
         boolean isNew = false;
-        if(projectId==0) {
+        if(projectId ==0) {
+            String fileNameWithOutExt = FilenameUtils.removeExtension(file.getOriginalFilename());
             ProjectDto project = new ProjectDto();
-            project.setDescription(file.getName());
-            project.setName(file.getName());
-            project.setSchema(IfcSchema.ifc2x3tc1);
+            project.setDescription(fileNameWithOutExt);
+            project.setName(fileNameWithOutExt+"_"+ DateTimeUtils.getCurrentlyDateTime());
+            project.setSchema(schema);
             project.setExportLengthMeasurePrefix(SSIPrefix.meter);
             projectService.createProject(project);
             projectId = project.getProjectId();
             isNew = true;
         }
-        logger.info("CheckIn process about to start for projectId: "+projectId);
+        logger.info("CheckIn process about to start for projectId: "+ projectId);
         return ResponseEntity.ok(processService.checkIn(projectId, file, isNew));
     }
 
@@ -51,7 +65,7 @@ public class ProcessController {
 
     @GetMapping("/process/progress/{projectId}")
     public ResponseEntity<String> getProcessTopicsForProject(
-            @PathVariable long projectId, @PathVariable long topicId
+            @PathVariable long projectId
     ) throws Exception {
         processService.getProgress(projectId);
         return ResponseEntity.ok(CommonConstants.SUCCESS);
@@ -59,7 +73,7 @@ public class ProcessController {
 
     @GetMapping("/process/progress")
     public ResponseEntity<String> getAllProcessTopics(
-            @PathVariable long projectId, @PathVariable long topicId
+            @PathVariable long projectId
     ) throws Exception {
         processService.getProgress(projectId);
         return ResponseEntity.ok(CommonConstants.SUCCESS);
