@@ -27,7 +27,7 @@ public class ProcessService {
         SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
         logger.info("CheckIn Process Prepared");
-        asyncCheckinService.checkInAsync(projectId, bimFile, pluginConfig, project, topicId, isNew);
+        asyncCheckinService.checkInAsync(projectId, bimFile, pluginConfig, topicId);
         logger.info("CheckIn Process Added to Queue");
         return getProcessStatus(projectId, topicId);
     }

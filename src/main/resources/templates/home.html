@@ -11,13 +11,6 @@
 	th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
 <link rel="stylesheet" th:href="@{/css/main.css}" />
 <script>
-	var projectId = document.cookie
-	  .split("; ")
-		  .find((row) => row.startsWith("projectId"))
-	if(projectId) (
-		window.location.replace("/myProject?"+projectId)
-	)
-
 	async function addProject() {
 		var name = document.getElementById('projectName').value
 		var schema = document.getElementById('projectSchema').value
@@ -64,8 +57,6 @@
 				element.style.width =  "100%";
 				element.innerHTML = json.title + ":" + "100%";
 				setTimeout(function(){
-					document.cookie =
-					"projectId="+data.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
 					alert("Finished Uploading");
 					element.style.display = "none";
 					refreshPage();
@@ -113,6 +104,7 @@
 			<span th:text="'Hello, ' + ${message}"></span>
 		</h2>
 	</div>
+<!--	<button onclick="showHideProjectForm(true)">Add Project</button>-->
 	<div>
         <input th:attr="id=|file_0|" type="file"/>
 		<button name="button" value="OK" type="button"
@@ -122,6 +114,50 @@
 			<div th:attr="id=|progress_0|" class="progress"></div>
 		</div>
 	</div>
+	<table>
+		<tr>
+			<th>ID</th>
+			<th>Project Name</th>
+			<th>Project Description</th>
+			<th>Actions</th>
+		</tr>
+		<tr th:each="project: ${projects}">
+			<td th:text="${project.projectId}" />
+			<td th:text="${project.name}" />
+			<td th:text="${project.description}" />
+			<td>
+				<input th:attr="id=|file_${project.projectId}|" type="file"/>
+				<button name="button" value="OK" type="button"
+						th:attr="onclick=|hello('${project.projectId}')|">UPLOAD</button>
+
+				<div th:attr="id=|progress_status_${project.projectId}|" class="progress_status">
+					<div th:attr="id=|progress_${project.projectId}|" class="progress"></div>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+	<div id="projectForm" class="modal">
+		<div class="modal-content">
+			<div class="contact-form">
+				<a class="close" onclick="showHideProjectForm(false)">&times;</a>
+				<form action="/">
+					<h2>Add Project</h2>
+					<div>
+						<input class="fname" type="text" id="projectName" placeholder="Project name" />
+						<input type="text" id="projectSchema" placeholder="Schema (ifc2x3tc1 or ifc4)" />
+						<input type="text" id="projectMeasurePrefix" placeholder="Export Measurement Prefix" />
+					</div>
+					<span>Description</span>
+					<div>
+						<textarea id="projectDescription" rows="4"></textarea>
+					</div>
+					<button onclick="addProject()">Submit</button>
+				</form>
+			</div>
+		</div>
+	</div>
+
 	<script type="text/javascript"
 		th:src="@{webjars/bootstrap/4.2.1/js/bootstrap.min.js}"></script>
 </body>

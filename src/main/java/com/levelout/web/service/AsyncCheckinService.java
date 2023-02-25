@@ -1,5 +1,6 @@
 package com.levelout.web.service;
 
+import com.levelout.web.utils.DateTimeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.client.BimServerClient;
@@ -20,12 +21,15 @@ public class AsyncCheckinService {
     BimServerClient bimServerClient;
 
     @Async
-    public void checkInAsync(long projectId, MultipartFile bimFile, SDeserializerPluginConfiguration pluginConfig, SProject project, long topicId, boolean isNew) throws UserException, ServerException, IOException {
+    public void checkInAsync(long projectId, MultipartFile bimFile, SDeserializerPluginConfiguration pluginConfig, long topicId) throws UserException, ServerException, IOException {
         logger.info("Starting check-in process for the project: "+projectId);
+        String revisionDescription = bimFile.getOriginalFilename() + " uploaded at " + DateTimeUtils.currentTimeWithMonthName();
         bimServerClient.checkinAsync(
-                projectId, project.getDescription(), pluginConfig.getOid(), false,
+                projectId, revisionDescription, pluginConfig.getOid(), false,
                 bimFile.getSize(), bimFile.getName(), bimFile.getInputStream(), topicId
         );
         logger.info("Finished check-in process for the project: "+projectId);
     }
+
+
 }

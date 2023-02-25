@@ -11,45 +11,9 @@
 	th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
 <link rel="stylesheet" th:href="@{/css/main.css}" />
 <script>
-	var projectId = document.cookie
-	  .split("; ")
-		  .find((row) => row.startsWith("projectId"))
-	if(projectId) (
-		window.location.replace("/myProject?"+projectId)
-	)
-
-	async function addProject() {
-		var name = document.getElementById('projectName').value
-		var schema = document.getElementById('projectSchema').value
-		var exportLengthMeasurePrefix = document.getElementById('projectMeasurePrefix').value
-		var description = document.getElementById('projectDescription').value
-
-		const response = await fetch("/project", {
-			  method: 'PUT',
-			  body: JSON.stringify({
-				name:name,
-				schema:schema,
-				exportLengthMeasurePrefix:exportLengthMeasurePrefix,
-				description:description
-	    	  }),
-			  headers: {
-				'Content-type': 'application/json; charset=UTF-8',
-			  }
-	    })
-	}
-
     function refreshPage(){
         window.location.reload();
     }
-
-	function showHideProjectForm(show) {
-		if(show) {
-			document.getElementById('projectForm').style.display="block"
-		}
-		else {
-			document.getElementById('projectForm').style.display="none"
-		}
-	}
 
 	function update(data, elementId_suffix) {
 		var element = document.getElementById("progress_"+elementId_suffix);
@@ -64,8 +28,6 @@
 				element.style.width =  "100%";
 				element.innerHTML = json.title + ":" + "100%";
 				setTimeout(function(){
-					document.cookie =
-					"projectId="+data.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
 					alert("Finished Uploading");
 					element.style.display = "none";
 					refreshPage();
@@ -79,6 +41,7 @@
 		  });
 		}).catch(err => console.error(err));
 	}
+
 	function hello(projectId) {
 		const inputFile = document.getElementById("file_"+projectId);
 		const formData = new FormData();
@@ -113,15 +76,30 @@
 			<span th:text="'Hello, ' + ${message}"></span>
 		</h2>
 	</div>
+	<h1><u>IFC</u></u></h1>
 	<div>
-        <input th:attr="id=|file_0|" type="file"/>
+        <input th:attr="id=|file_${projectId}|" type="file" style="width: 200px"/>
 		<button name="button" value="OK" type="button"
-				th:attr="onclick=|hello('0')|">UPLOAD</button>
+				th:attr="onclick=|hello('${projectId}')|">Upload New Revision</button>
 
-		<div th:attr="id=|progress_status_0|" class="progress_status">
-			<div th:attr="id=|progress_0|" class="progress"></div>
+		<div th:attr="id=|progress_status_${projectId}|" class="progress_status">
+			<div th:attr="id=|progress_${projectId}|" class="progress"></div>
 		</div>
 	</div>
+	<table>
+		<tr>
+			<th>Revision ID</th>
+			<th>Revision Description</th>
+		</tr>
+		<tr th:each="revision: ${revisions}">
+			<td th:text="${revision.revisionId}" />
+			<td th:text="${revision.description}" />
+		</tr>
+	</table>
+	<br/><br/><br/><br/>
+	<h1><u>Report</u></u></h1>
+	<br/><br/><br/><br/>
+	<h1><u>Map</u></u></h1>
 	<script type="text/javascript"
 		th:src="@{webjars/bootstrap/4.2.1/js/bootstrap.min.js}"></script>
 </body>

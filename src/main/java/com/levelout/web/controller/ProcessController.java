@@ -16,6 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
+import java.util.List;
+
 @RestController
 public class ProcessController {
     final static Log logger = LogFactory.getLog(ProcessController.class);
@@ -77,5 +80,13 @@ public class ProcessController {
     ) throws Exception {
         processService.getProgress(projectId);
         return ResponseEntity.ok(CommonConstants.SUCCESS);
+    }
+
+    public static void main(String args[]) {
+        List<Integer> num = Arrays.asList(1,2,3,4);
+        num.stream().filter(s->s%2==1).mapToInt(s->s.intValue()).sum();
+        System.out.println(
+
+        );
     }
 }

@@ -2,10 +2,12 @@ package com.levelout.web.service;
 
 import com.levelout.web.enums.IfcSchema;
 import com.levelout.web.model.ProjectDto;
+import com.levelout.web.model.RevisionDto;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.client.BimServerClient;
 import org.bimserver.interfaces.objects.SProject;
+import org.bimserver.interfaces.objects.SRevision;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,6 +82,18 @@ public class ProjectService {
 	public List<ProjectDto> getAllProjects() throws ServerException, UserException {
 		List<SProject> projects = bimServerClient.getServiceInterface().getAllProjects(true, true);
 		return projects.stream().map(this::mapSProjectToProject).collect(Collectors.toList());
+	}
+
+	public List<RevisionDto> getAllRevisions(long projectId) throws ServerException, UserException {
+		List<SRevision> revisions = bimServerClient.getServiceInterface().getAllRevisionsOfProject(projectId);
+		return revisions.stream().map(this::mapSRevisionToRevision).collect(Collectors.toList());
+	}
+
+	private RevisionDto mapSRevisionToRevision(SRevision sRevision) {
+		RevisionDto revisionDto = new RevisionDto();
+		revisionDto.setRevisionId(sRevision.getOid());
+		revisionDto.setDescription(sRevision.getComment());
+		return revisionDto;
 	}
 
 	private ProjectDto mapSProjectToProject(SProject sProject) {

@@ -1,6 +1,6 @@
 package com.levelout.web.controller;
 
-import com.levelout.web.model.ProjectDto;
+import com.levelout.web.model.RevisionDto;
 import com.levelout.web.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,14 +21,31 @@ public class HomeController {
 	ProjectService projectService;
 
 	@GetMapping("/")
-	public String home(@RequestParam(name = "name", required = false, defaultValue = "") String name, Model model) {
+	public String home(Model model) {
 		try {
-			List<ProjectDto> projects = projectService.getAllProjects();
-			model.addAttribute("message", name == null || name.isEmpty() ? message : name);
-			model.addAttribute("projects", projects);
+			model.addAttribute("message", message);
 		} catch (Exception e) {
 			return "error";
 		}
 		return "welcome";
+	}
+
+	@GetMapping("/myProject")
+	public String myProject(
+			@RequestParam(name = "projectId") Long projectId,
+			Model model) {
+		try {
+			List<RevisionDto> revisions = projectService.getAllRevisions(projectId);
+			model.addAttribute("message", message);
+
+			if(projectId==null || projectId==0)
+				return "welcome";
+
+			model.addAttribute("revisions", revisions);
+			model.addAttribute("projectId", projectId);
+		} catch (Exception e) {
+			return "error";
+		}
+		return "revisions";
 	}
 }
