@@ -5,7 +5,7 @@
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<title>Spring Boot Thymeleaf Hello World Example</title>
+<title>LevelOut-Web</title>
 
 <link rel="stylesheet"
 	th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
@@ -92,19 +92,13 @@
 </head>
 
 <body>
-	<p>
-		<button class="button" onclick="window.open('https://www.uni-weimar.de/en/university/start/','_blank')">
-			Bauhaus-Universität Weimar
-		</button>
-	</p>
-
-	<div class="starter-template">
-		<h1>Upload IFC Files</h1>
-		<h2>
-			<span th:text="'Hello, ' + ${message}"></span>
-		</h2>
-	</div>
-<!--	<button onclick="showHideProjectForm(true)">Add Project</button>-->
+<div style="text-align: center;">
+<h1>
+	<a href="https://www.uni-weimar.de/en/university/news/bauhausjournal-online/titel/levelout-project-launch-indoor-and-outdoor-smart-navigation/" target="_blank">
+		LEVELOUT
+	</a>
+</h1>
+</div>
 	<div>
         <input th:attr="id=|file_0|" type="file"/>
 		<button name="button" value="OK" type="button"

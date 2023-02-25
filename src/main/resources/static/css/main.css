@@ -1,5 +1,5 @@
 body {
-  padding-top: 5rem;
+  padding-top: 1rem;
 }
 .starter-template {
   padding: 3rem 1.5rem;
@@ -78,43 +78,4 @@ textarea {
     margin-bottom: 20px;
     border: 1px solid #1c87c9;
     outline: none;
-}
-.contact-form button {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    background: #1c87c9;
-    font-size: 16px;
-    font-weight: 400;
-    color: #fff;
-}
-button:hover {
-    background: #2371a0;
-}
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-button.button {
-    background: none;
-    border-top: none;
-    outline: none;
-    border-right: none;
-    border-left: none;
-    border-bottom: #02274a 1px solid;
-    padding: 0 0 3px 0;
-    font-size: 16px;
-    cursor: pointer;
-}
-button.button:hover {
-    border-bottom: #a99567 1px solid;
-    color: #a99567;
 }
