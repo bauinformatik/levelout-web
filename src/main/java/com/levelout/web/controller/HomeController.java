@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @Controller
@@ -19,6 +20,9 @@ public class HomeController {
 
 	@Autowired
 	ProjectService projectService;
+
+	@Autowired
+	HttpSession session;
 
 	@GetMapping("/")
 	public String home(Model model) {
@@ -35,12 +39,9 @@ public class HomeController {
 			@RequestParam(name = "projectId") Long projectId,
 			Model model) {
 		try {
-			List<RevisionDto> revisions = projectService.getAllRevisions(projectId);
+			projectId = (Long) session.getAttribute("projectId");
+			List<RevisionDto> revisions = projectId== null ? List.of() : projectService.getAllRevisions(projectId);
 			model.addAttribute("message", message);
-
-			if(projectId==null || projectId==0)
-				return "welcome";
-
 			model.addAttribute("revisions", revisions);
 			model.addAttribute("projectId", projectId);
 		} catch (Exception e) {

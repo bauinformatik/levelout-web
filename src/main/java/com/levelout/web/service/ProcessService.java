@@ -22,24 +22,23 @@ public class ProcessService {
     @Autowired
     AsyncCheckinService asyncCheckinService;
 
-    public ProcessDto checkIn(long projectId, MultipartFile bimFile, boolean isNew) throws Exception {
+    public ProcessDto checkIn(long projectId, MultipartFile bimFile) throws Exception {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
-        SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
         logger.info("CheckIn Process Prepared");
         asyncCheckinService.checkInAsync(projectId, bimFile, pluginConfig, topicId);
         logger.info("CheckIn Process Added to Queue");
-        return getProcessStatus(projectId, topicId);
+        return getProcessStatus(topicId);
     }
 
-    public ProcessDto getProcessStatus(long projectId, long topicId) throws ServerException, UserException, InterruptedException {
+    public ProcessDto getProcessStatus(long topicId) throws ServerException, UserException, InterruptedException {
         SLongActionState progress = bimServerClient.getRegistry().getProgress(topicId);
-        return mapToProcessDto(projectId, topicId, progress);
+        return mapToProcessDto(topicId, progress);
     }
 
-    private ProcessDto mapToProcessDto(long projectId, long topicId, SLongActionState progress) {
+    private ProcessDto mapToProcessDto(long topicId, SLongActionState progress) {
         ProcessDto process = new ProcessDto();
-        process.setProjectId(projectId);
+        process.setProjectId(1L); // TODO remove projectId from html
         process.setTopicId(topicId);
         process.setProcessStatusType(ProcessStatusType.IN_PROGRESS);
         process.setProcessType(ProcessType.CHECK_IN);

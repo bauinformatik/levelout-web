@@ -1,6 +1,5 @@
 package com.levelout.web.controller;
 
-import com.levelout.web.constants.CommonConstants;
 import com.levelout.web.enums.IfcSchema;
 import com.levelout.web.model.ProcessDto;
 import com.levelout.web.model.ProjectDto;
@@ -11,13 +10,14 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.SSIPrefix;
+import org.bimserver.shared.exceptions.ServerException;
+import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.List;
+import javax.servlet.http.HttpSession;
 
 @RestController
 public class ProcessController {
@@ -26,67 +26,43 @@ public class ProcessController {
     ProcessService processService;
 
     @Autowired
+    HttpSession session;
+
+    @Autowired
     ProjectService projectService;
 
-    @PostMapping("/process/checkIn/{projectId}")
+    @PostMapping("/process/checkIn")
     public ResponseEntity<ProcessDto> checkIn(
-            @PathVariable long projectId, @RequestParam MultipartFile file
+             @RequestParam MultipartFile file
     ) throws Exception {
-        return checkInForSchema(projectId, file, IfcSchema.ifc4);
-    }
-
-    @PostMapping("/process/checkIn/{projectId}/{schema}")
-    public ResponseEntity<ProcessDto> checkIn(
-            @PathVariable long projectId, @PathVariable IfcSchema schema, @RequestParam MultipartFile file
-    ) throws Exception {
-        return checkInForSchema(projectId, file, schema);
-    }
-
-    private ResponseEntity<ProcessDto> checkInForSchema(long projectId, MultipartFile file, IfcSchema schema) throws Exception {
-        boolean isNew = false;
-        if(projectId ==0) {
-            String fileNameWithOutExt = FilenameUtils.removeExtension(file.getOriginalFilename());
-            ProjectDto project = new ProjectDto();
-            project.setDescription(fileNameWithOutExt);
-            project.setName(fileNameWithOutExt+"_"+ DateTimeUtils.getCurrentlyDateTime());
-            project.setSchema(schema);
-            project.setExportLengthMeasurePrefix(SSIPrefix.meter);
-            projectService.createProject(project);
-            projectId = project.getProjectId();
-            isNew = true;
+        Long projectId = (Long) session.getAttribute("projectId");
+        if (projectId == null){
+            projectId = createProject(file, IfcSchema.ifc4);
+            session.setAttribute("projectId", projectId);
         }
         logger.info("CheckIn process about to start for projectId: "+ projectId);
-        return ResponseEntity.ok(processService.checkIn(projectId, file, isNew));
+        return ResponseEntity.ok(processService.checkIn(projectId, file));
     }
 
-    @GetMapping("/process/status/{projectId}/{topicId}")
+    private long createProject(MultipartFile file, IfcSchema schema) throws ServerException, UserException {
+        long projectId;
+        String fileNameWithOutExt = FilenameUtils.removeExtension(file.getOriginalFilename());
+        ProjectDto project = new ProjectDto();
+        project.setDescription(fileNameWithOutExt);
+        project.setName(fileNameWithOutExt+"_"+ DateTimeUtils.getCurrentlyDateTime());
+        project.setSchema(schema);
+        project.setExportLengthMeasurePrefix(SSIPrefix.meter);
+        projectService.createProject(project);
+        projectId = project.getProjectId();
+        return projectId;
+    }
+
+    @GetMapping("/process/status/{topicId}")
     public ResponseEntity<ProcessDto> getProcessStatus(
-            @PathVariable long projectId, @PathVariable long topicId
+            @PathVariable long topicId
     ) throws Exception {
-        return ResponseEntity.ok(processService.getProcessStatus(projectId, topicId));
+        // TODO get the topicId from projectId (session)
+        return ResponseEntity.ok(processService.getProcessStatus(topicId));
     }
 
-    @GetMapping("/process/progress/{projectId}")
-    public ResponseEntity<String> getProcessTopicsForProject(
-            @PathVariable long projectId
-    ) throws Exception {
-        processService.getProgress(projectId);
-        return ResponseEntity.ok(CommonConstants.SUCCESS);
-    }
-
-    @GetMapping("/process/progress")
-    public ResponseEntity<String> getAllProcessTopics(
-            @PathVariable long projectId
-    ) throws Exception {
-        processService.getProgress(projectId);
-        return ResponseEntity.ok(CommonConstants.SUCCESS);
-    }
-
-    public static void main(String args[]) {
-        List<Integer> num = Arrays.asList(1,2,3,4);
-        num.stream().filter(s->s%2==1).mapToInt(s->s.intValue()).sum();
-        System.out.println(
-
-        );
-    }
 }
