@@ -1,11 +1,11 @@
 package com.levelout.web.service;
 
+import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.enums.IfcSchema;
 import com.levelout.web.model.ProjectDto;
 import com.levelout.web.model.RevisionDto;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bimserver.client.BimServerClient;
 import org.bimserver.interfaces.objects.SProject;
 import org.bimserver.interfaces.objects.SRevision;
 import org.bimserver.shared.exceptions.ServerException;
@@ -25,7 +25,7 @@ public class ProjectService {
 	final static Log logger = LogFactory.getLog(ProjectService.class);
 	
 	@Autowired
-	BimServerClient bimServerClient;
+	BimServerClientWrapper bimServerClient;
 
 	public void createProject(ProjectDto projectDto) throws ServerException, UserException {
 		SProject project = bimServerClient.getServiceInterface().addProject(

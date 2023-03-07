@@ -1,9 +1,9 @@
 package com.levelout.web.service;
 
+import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.utils.DateTimeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bimserver.client.BimServerClient;
 import org.bimserver.interfaces.objects.*;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
@@ -18,7 +18,7 @@ import java.io.IOException;
 public class AsyncCheckinService {
     final static Log logger = LogFactory.getLog(AsyncCheckinService.class);
     @Autowired
-    BimServerClient bimServerClient;
+    BimServerClientWrapper bimServerClient;
 
     @Async
     public void checkInAsync(long projectId, MultipartFile bimFile, SDeserializerPluginConfiguration pluginConfig, long topicId) throws UserException, ServerException, IOException {
