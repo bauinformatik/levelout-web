@@ -18,6 +18,18 @@ The following guides illustrate how to use some features concretely:
 * [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
 * [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
 
+### How to deploy the WAR
+1. Under the project, creat war file for the application using below command
+```
+mvn clean package
+```
+2. Within the same folder 'target' folder will be created. Copy 'levelout-web.war' from this folder 'target'
+3. If external tomcat version >= 10.0, paste the war file under the folder 'tomcat_installation_folder\webapps-javaee'
+    Else, paste the war file under 'tomcat_installation_folder\webapps' folder
+4. Restart your tomcat server
+5. Hit the URL 'http://host:port/levelout-web' to start using the levelout-web application.
+
+
 ### How to run the JAR
 1. Keep application.properties file at a location in your machine. (The example of the file content below)
 ```

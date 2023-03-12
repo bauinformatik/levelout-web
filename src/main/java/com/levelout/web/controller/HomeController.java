@@ -30,9 +30,9 @@ public class HomeController {
 		return "welcome";
 	}
 
-	@GetMapping("/myProject")
+	@GetMapping("/project")
 	public String myProject(
-			@RequestParam(name = "projectId") Long projectId,
+			@RequestParam(name = "leveloutProjectId") Long projectId,
 			Model model) {
 		try {
 			List<RevisionDto> revisions = projectService.getAllRevisions(projectId);

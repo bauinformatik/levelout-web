@@ -11,13 +11,14 @@
 	th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
 <link rel="stylesheet" th:href="@{/css/main.css}" />
 <script>
+	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
 	async function addProject() {
 		var name = document.getElementById('projectName').value
 		var schema = document.getElementById('projectSchema').value
 		var exportLengthMeasurePrefix = document.getElementById('projectMeasurePrefix').value
 		var description = document.getElementById('projectDescription').value
 
-		const response = await fetch("/project", {
+		const response = await fetch(contextRoot+"/project", {
 			  method: 'PUT',
 			  body: JSON.stringify({
 				name:name,
@@ -47,7 +48,7 @@
 	function update(data, elementId_suffix) {
 		var element = document.getElementById("progress_"+elementId_suffix);
 		element.style.display = "block";
-		fetch("/process/status/"+data.projectId+"/"+data.topicId, {
+		fetch(contextRoot+"/process/status/"+data.projectId+"/"+data.topicId, {
 			method: "get"
 		})
 		.then(function(response) {
@@ -76,7 +77,7 @@
 		for (const file of inputFile.files) {
 			formData.append("file", file);
 		}
-		fetch("/process/checkIn/"+projectId, {
+		fetch(contextRoot+"/process/checkIn/"+projectId, {
 			method: "post",
 			body: formData
 		})
