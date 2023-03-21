@@ -24,10 +24,17 @@ public class AsyncCheckinService {
     public void checkInAsync(long projectId, MultipartFile bimFile, SDeserializerPluginConfiguration pluginConfig, long topicId) throws UserException, ServerException, IOException {
         logger.info("Starting check-in process for the project: "+projectId);
         String revisionDescription = bimFile.getOriginalFilename() + " uploaded at " + DateTimeUtils.getCurrentlyDateTime();
-        bimServerClient.checkinAsync(
-                projectId, revisionDescription, pluginConfig.getOid(), false,
-                bimFile.getSize(), bimFile.getName(), bimFile.getInputStream(), topicId
-        );
+        try {
+            bimServerClient.checkinAsync(
+                    projectId, revisionDescription, pluginConfig.getOid(), false,
+                    bimFile.getSize(), bimFile.getName(), bimFile.getInputStream(), topicId
+            );
+        } catch (RuntimeException e) {
+            logger.error("Check-in process could not be initiated due to runtime error: "+e.getMessage(), e);
+            throw e;
+        } finally {
+            bimServerClient.getServiceInterface().cleanupLongAction(topicId);
+        }
         logger.info("Finished check-in process for the project: "+projectId);
     }
 }

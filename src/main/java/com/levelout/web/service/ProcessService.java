@@ -24,7 +24,6 @@ public class ProcessService {
 
     public ProcessDto checkIn(long projectId, MultipartFile bimFile, boolean isNew) throws Exception {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
-        SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
         logger.info("CheckIn Process Prepared");
         asyncCheckinService.checkInAsync(projectId, bimFile, pluginConfig, topicId);
