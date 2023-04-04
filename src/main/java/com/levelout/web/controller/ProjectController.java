@@ -2,6 +2,7 @@ package com.levelout.web.controller;
 
 import com.levelout.web.constants.CommonConstants;
 import com.levelout.web.model.ProjectDto;
+import com.levelout.web.model.RevisionDto;
 import com.levelout.web.service.ProjectService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,6 +24,11 @@ public class ProjectController {
     @GetMapping("/project/{projectId}")
     public ResponseEntity<ProjectDto> get(@PathVariable long projectId) throws Exception {
         return ResponseEntity.ok(projectService.getProjectById(projectId));
+    }
+
+    @GetMapping("/project/{projectId}/revisions")
+    public ResponseEntity<List<RevisionDto>> getRevisions(@PathVariable long projectId) throws Exception {
+        return ResponseEntity.ok(projectService.getAllRevisions(projectId));
     }
 
     @GetMapping("/project/projectName/{projectName}")

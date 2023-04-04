@@ -27,6 +27,16 @@ public class HomeController {
 		} catch (Exception e) {
 			return "error";
 		}
+		return "revisions_ajax";
+	}
+
+	@GetMapping("/home")
+	public String home1(Model model) {
+		try {
+			model.addAttribute("message", message);
+		} catch (Exception e) {
+			return "error";
+		}
 		return "welcome";
 	}
 
