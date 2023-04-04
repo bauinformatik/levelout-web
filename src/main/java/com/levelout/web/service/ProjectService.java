@@ -11,6 +11,7 @@ import org.bimserver.interfaces.objects.SRevision;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,6 +28,9 @@ public class ProjectService {
 	@Autowired
 	BimServerClientWrapper bimServerClient;
 
+	@Autowired
+	PluginService pluginService;
+
 	public void createProject(ProjectDto projectDto) throws ServerException, UserException {
 		SProject project = bimServerClient.getServiceInterface().addProject(
 				projectDto.getName(),
@@ -34,6 +38,8 @@ public class ProjectService {
 		);
 		projectDto.setProjectId(project.getOid());
 		updateProjectDetails(projectDto, project);
+
+		pluginService.addLevelOutServiceToProject(project);
 	}
 
 	public void updateProject(ProjectDto projectDto) throws ServerException, UserException {
@@ -104,5 +110,18 @@ public class ProjectService {
 		project.setSchema(IfcSchema.valueOf(sProject.getSchema()));
 		project.setExportLengthMeasurePrefix(sProject.getExportLengthMeasurePrefix());
 		return project;
+	}
+
+	@Scheduled(cron = "0 0 0 * * *", zone = "CET")
+	public void topicsCleanupAction() throws ServerException, UserException {
+		bimServerClient.getRegistry().getProgressTopicsOnServer().forEach(topic-> {
+			logger.error("Cleaning up started for topic: "+topic);
+			try {
+				bimServerClient.getServiceInterface().cleanupLongAction(topic);
+				logger.error("Cleaning up successful for topic: "+topic);
+			} catch (UserException | ServerException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 }
