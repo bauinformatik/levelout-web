@@ -112,6 +112,12 @@ public class ProjectService {
 		return project;
 	}
 
+	/**
+	 * Cleans all the in progress topics at midnight CET time everyday
+	 *
+	 * @throws ServerException
+	 * @throws UserException
+	 */
 	@Scheduled(cron = "0 0 0 * * *", zone = "CET")
 	public void topicsCleanupAction() throws ServerException, UserException {
 		bimServerClient.getRegistry().getProgressTopicsOnServer().forEach(topic-> {
