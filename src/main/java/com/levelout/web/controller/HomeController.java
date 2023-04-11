@@ -21,9 +21,10 @@ public class HomeController {
 	ProjectService projectService;
 
 	@GetMapping("/")
-	public String home(Model model) {
+	public String home(Model model, @RequestParam(defaultValue = "") String initAction) {
 		try {
 			model.addAttribute("message", message);
+			model.addAttribute("initAction", initAction);
 		} catch (Exception e) {
 			return "error";
 		}

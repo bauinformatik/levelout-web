@@ -31,6 +31,8 @@ public class AsyncCheckinService {
             );
         } catch (RuntimeException e) {
             logger.error("Check-in process could not be initiated due to runtime error: "+e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Check-in process could not be initiated due to runtime error: "+e.getMessage(), e);
         }
         logger.info("Finished check-in process for the project: "+projectId);
     }
