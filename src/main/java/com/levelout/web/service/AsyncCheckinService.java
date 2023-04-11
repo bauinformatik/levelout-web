@@ -31,9 +31,6 @@ public class AsyncCheckinService {
             );
         } catch (RuntimeException e) {
             logger.error("Check-in process could not be initiated due to runtime error: "+e.getMessage(), e);
-            bimServerClient.getServiceInterface().cleanupLongAction(topicId);
-            throw e;
-        } finally {
         }
         logger.info("Finished check-in process for the project: "+projectId);
     }
