@@ -41,6 +41,14 @@
 
 <script>
 	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
+	var cookieAttribute = 'leveloutProjectId'
+
+	var initAction = "[[${initAction}]]";
+	if(initAction == 'deleteCookie'){
+       document.cookie = cookieAttribute+"=undefined; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
+	   alert(document.cookie+" is deleted");
+	}
+
 	function update(data, elementId_suffix) {
 		var element = document.getElementById("progress_"+elementId_suffix);
 		element.style.display = "block";
@@ -55,7 +63,6 @@
 				element.innerHTML = json.title + ":" + "100%";
 				setTimeout(function(){
 					alert("Finished Uploading");
-
 					element.style.display = "none";
 				},1000);
 			} else {
@@ -65,11 +72,10 @@
 				update(json, elementId_suffix);
 			}
 		  });
-		}).catch(err => console.error(err));
+		}).catch(err => alert(err.error));
 	}
 
 	function upload(projectId) {
-		alert(projectId);
 		const inputFile = document.getElementById("file_"+projectId);
 		const formData = new FormData();
 		for (const file of inputFile.files) {
@@ -83,10 +89,10 @@
 		  // response.json() returns a promise, use the same .then syntax to work with the results
 		  response.json().then(function(json){
 			console.log(": "+json.percentage);
-			document.cookie = "leveloutProjectId="+json.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
+			document.cookie = cookieAttribute+"="+json.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
 			update(json, projectId);
 		  });
-		}).catch(err => console.error(err));
+		}).catch(err => alert(err.error));
 	}
 
 	function getCookie(name) {
@@ -96,8 +102,8 @@
 	}
 
 	function onloadfun() {
-		var projectId = getCookie("leveloutProjectId");
-		if(projectId) {
+		var projectId = getCookie(cookieAttribute);
+		if(projectId && !(projectId === 'undefined' || projectId === null)) {
 			document.getElementById("firstUpload").style.display="none";
 			document.getElementById("revisionUpload").innerHTML = "<input id=\"file_"+projectId+"\" type=\"file\" style=\"width: 200px\"/>" +
 			"<button name=\"button\" value=\"OK\" type=\"button\" onclick=\"upload('"+projectId+"')\">Upload New Revision</button>" +
@@ -118,7 +124,7 @@
 				"<br/><br/><br/><br/><h1><u>Report</u></u></h1><br/><br/><br/><br/><h1><u>Map</u></u></h1>"
 				document.getElementById("revisionsDetails").style.display="block";
 			  });
-			}).catch(err => console.error(err));
+			}).catch(err => alert(err.error));
 		} else {
 			document.getElementById("firstUpload").style.display="block";
 			document.getElementById("revisionUpload").style.display="none";
