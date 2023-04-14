@@ -6,12 +6,8 @@ import java.net.URL;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bimserver.client.BimServerClient;
 import org.bimserver.client.json.JsonBimServerClientFactory;
-import org.bimserver.shared.ChannelConnectionException;
-import org.bimserver.shared.UsernamePasswordAuthenticationInfo;
 import org.bimserver.shared.exceptions.BimServerClientException;
-import org.bimserver.shared.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -51,12 +47,8 @@ public class BimServerClientConfiguration {
 	}
 
 	@Bean
-	public BimServerClient bimServerClient(
-			@Qualifier("bimServerClientFactory") JsonBimServerClientFactory bimServerClientFactory)
-			throws ServiceException, ChannelConnectionException {
-		logger.debug("Creating BIM client for host: " + host);
-		BimServerClient client = bimServerClientFactory.create(new UsernamePasswordAuthenticationInfo(user, password));
-		logger.debug("Successfully Created BIM client for the host: " + host);
-		return client;
+	public BimServerClientWrapper bimServerClient(
+			@Qualifier("bimServerClientFactory") JsonBimServerClientFactory bimServerClientFactory) {
+		return new BimServerClientWrapper(bimServerClientFactory, this.host, this.user, this.password);
 	}
 }

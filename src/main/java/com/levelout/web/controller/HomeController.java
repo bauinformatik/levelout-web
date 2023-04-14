@@ -25,7 +25,18 @@ public class HomeController {
 	HttpSession session;
 
 	@GetMapping("/")
-	public String home(Model model) {
+	public String home(Model model, @RequestParam(defaultValue = "") String initAction) {
+		try {
+			model.addAttribute("message", message);
+			model.addAttribute("initAction", initAction);
+		} catch (Exception e) {
+			return "error";
+		}
+		return "revisions_ajax";
+	}
+
+	@GetMapping("/home")
+	public String home1(Model model) {
 		try {
 			model.addAttribute("message", message);
 		} catch (Exception e) {
@@ -34,9 +45,9 @@ public class HomeController {
 		return "welcome";
 	}
 
-	@GetMapping("/myProject")
+	@GetMapping("/project")
 	public String myProject(
-			@RequestParam(name = "projectId") Long projectId,
+			@RequestParam(name = "leveloutProjectId") Long projectId,
 			Model model) {
 		try {
 			projectId = (Long) session.getAttribute("projectId");

@@ -1,11 +1,11 @@
 package com.levelout.web.service;
 
+import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.enums.ProcessStatusType;
 import com.levelout.web.enums.ProcessType;
 import com.levelout.web.model.ProcessDto;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bimserver.client.BimServerClient;
 import org.bimserver.interfaces.objects.*;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProcessService {
     final static Log logger = LogFactory.getLog(ProcessService.class);
     @Autowired
-    BimServerClient bimServerClient;
+    BimServerClientWrapper bimServerClient;
 
     @Autowired
     AsyncCheckinService asyncCheckinService;

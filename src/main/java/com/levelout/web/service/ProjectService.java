@@ -1,16 +1,17 @@
 package com.levelout.web.service;
 
+import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.enums.IfcSchema;
 import com.levelout.web.model.ProjectDto;
 import com.levelout.web.model.RevisionDto;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bimserver.client.BimServerClient;
 import org.bimserver.interfaces.objects.SProject;
 import org.bimserver.interfaces.objects.SRevision;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,7 +26,10 @@ public class ProjectService {
 	final static Log logger = LogFactory.getLog(ProjectService.class);
 	
 	@Autowired
-	BimServerClient bimServerClient;
+	BimServerClientWrapper bimServerClient;
+
+	@Autowired
+	PluginService pluginService;
 
 	public void createProject(ProjectDto projectDto) throws ServerException, UserException {
 		SProject project = bimServerClient.getServiceInterface().addProject(
@@ -34,6 +38,8 @@ public class ProjectService {
 		);
 		projectDto.setProjectId(project.getOid());
 		updateProjectDetails(projectDto, project);
+
+		pluginService.addLevelOutServiceToProject(project);
 	}
 
 	public void updateProject(ProjectDto projectDto) throws ServerException, UserException {
@@ -104,5 +110,24 @@ public class ProjectService {
 		project.setSchema(IfcSchema.valueOf(sProject.getSchema()));
 		project.setExportLengthMeasurePrefix(sProject.getExportLengthMeasurePrefix());
 		return project;
+	}
+
+	/**
+	 * Cleans all the in progress topics at midnight CET time everyday
+	 *
+	 * @throws ServerException
+	 * @throws UserException
+	 */
+	@Scheduled(cron = "0 0 0 * * *", zone = "CET")
+	public void topicsCleanupAction() throws ServerException, UserException {
+		bimServerClient.getRegistry().getProgressTopicsOnServer().forEach(topic-> {
+			logger.error("Cleaning up started for topic: "+topic);
+			try {
+				bimServerClient.getServiceInterface().cleanupLongAction(topic);
+				logger.error("Cleaning up successful for topic: "+topic);
+			} catch (UserException | ServerException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 }

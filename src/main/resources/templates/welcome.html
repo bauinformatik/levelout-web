@@ -11,11 +11,12 @@
 	th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
 <link rel="stylesheet" th:href="@{/css/main.css}" />
 <script>
+	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
 	var projectId = document.cookie
 	  .split("; ")
-		  .find((row) => row.startsWith("projectId"))
+		  .find((row) => row.startsWith("leveloutProjectId"))
 	if(projectId) (
-		window.location.replace("/myProject?"+projectId)
+		window.location.replace(contextRoot+"/project?"+projectId)
 	)
 
 	async function addProject() {
@@ -24,7 +25,7 @@
 		var exportLengthMeasurePrefix = document.getElementById('projectMeasurePrefix').value
 		var description = document.getElementById('projectDescription').value
 
-		const response = await fetch("/project", {
+		const response = await fetch(contextRoot+"/project", {
 			  method: 'PUT',
 			  body: JSON.stringify({
 				name:name,
@@ -54,7 +55,7 @@
 	function update(data, elementId_suffix) {
 		var element = document.getElementById("progress_"+elementId_suffix);
 		element.style.display = "block";
-		fetch("/process/status/"+data.topicId, {
+		fetch(contextRoot+"/process/status/"+data.topicId, {
 			method: "get"
 		})
 		.then(function(response) {
@@ -65,7 +66,7 @@
 				element.innerHTML = json.title + ":" + "100%";
 				setTimeout(function(){
 					document.cookie =
-					"projectId="+data.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
+					"leveloutProjectId="+data.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
 					alert("Finished Uploading");
 					element.style.display = "none";
 					refreshPage();
@@ -85,7 +86,7 @@
 		for (const file of inputFile.files) {
 			formData.append("file", file);
 		}
-		fetch("/process/checkIn", {
+		fetch(contextRoot+"/process/checkIn/", {
 			method: "post",
 			body: formData
 		})

@@ -1,9 +1,9 @@
 package com.levelout.web.service;
 
+import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.utils.DateTimeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bimserver.client.BimServerClient;
 import org.bimserver.interfaces.objects.*;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
@@ -18,16 +18,22 @@ import java.io.IOException;
 public class AsyncCheckinService {
     final static Log logger = LogFactory.getLog(AsyncCheckinService.class);
     @Autowired
-    BimServerClient bimServerClient;
+    BimServerClientWrapper bimServerClient;
 
     @Async
     public void checkInAsync(long projectId, MultipartFile bimFile, SDeserializerPluginConfiguration pluginConfig, long topicId) throws UserException, ServerException, IOException {
         logger.info("Starting check-in process for the project: "+projectId);
         String revisionDescription = bimFile.getOriginalFilename() + " uploaded at " + DateTimeUtils.getCurrentlyDateTime();
-        bimServerClient.checkinAsync(
-                projectId, revisionDescription, pluginConfig.getOid(), false,
-                bimFile.getSize(), bimFile.getName(), bimFile.getInputStream(), topicId
-        );
+        try {
+            bimServerClient.checkinAsync(
+                    projectId, revisionDescription, pluginConfig.getOid(), false,
+                    bimFile.getSize(), bimFile.getName(), bimFile.getInputStream(), topicId
+            );
+        } catch (RuntimeException e) {
+            logger.error("Check-in process could not be initiated due to runtime error: "+e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Check-in process could not be initiated due to runtime error: "+e.getMessage(), e);
+        }
         logger.info("Finished check-in process for the project: "+projectId);
     }
 }

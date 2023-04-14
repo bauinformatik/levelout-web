@@ -2,21 +2,24 @@ package com.levelout.web.config;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.bimserver.shared.exceptions.UserException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MultipartException.class)
+    private static final String DEFAULT_ERROR_MESSAGE = "Your file could not be stored. " +
+            "Please try again or contact admin if the issue persists.";
+
+    @ExceptionHandler(Exception.class)
     @ResponseBody
     ResponseEntity<?> handleControllerException(HttpServletRequest request, Throwable e) {
         HttpStatus status = getStatus(request);
-        return new ResponseEntity<String>(e.getMessage(), status);
+        return new ResponseEntity<>(e instanceof UserException ? e.getMessage() : DEFAULT_ERROR_MESSAGE, status);
     }
 
     private HttpStatus getStatus(HttpServletRequest request) {
