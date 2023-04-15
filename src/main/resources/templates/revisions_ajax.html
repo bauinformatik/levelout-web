@@ -13,7 +13,7 @@
 
 </head>
 
-<body onload="onloadfun()">
+<body onload="list()">
 <div style="text-align: center;">
 	<h1>
 		<a href="https://www.uni-weimar.de/en/university/news/bauhausjournal-online/titel/levelout-project-launch-indoor-and-outdoor-smart-navigation/" target="_blank">
@@ -22,37 +22,26 @@
 	</h1>
 </div>
 
-<h1><u>IFC</u></u></h1>
-<div id="firstUpload" style="display: none;">
-	<input th:attr="id=|file_0|" type="file" style="width: 200px"/>
-	<button name="button" value="OK" type="button"
-			th:attr="onclick=|upload('0')|">UPLOAD</button>
-
-	<div th:attr="id=|progress_status_0|" class="progress_status">
-		<div th:attr="id=|progress_0|" class="progress"></div>
+<h1><u>IFC</u></h1>
+<div id="revisionUpload">
+	<input id="file" type="file" style="width: 200px"/>
+	<button name="button" value="OK" type="button" onclick="upload()">UPLOAD</button>
+	<div id="progress_status" class="progress_status">
+		<div id="progress" class="progress"></div>
 	</div>
 </div>
-<div id="revisionUpload" style="display: none;">
-</div>
-<div id="revisionsDetails" style="display: none;">
+<div id="revisionsDetails">
 </div>
 <script type="text/javascript"
 		th:src="@{webjars/bootstrap/4.2.1/js/bootstrap.min.js}"></script>
 
 <script>
 	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
-	var cookieAttribute = 'leveloutProjectId'
 
-	var initAction = "[[${initAction}]]";
-	if(initAction == 'deleteCookie'){
-       document.cookie = cookieAttribute+"=undefined; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
-	   alert(document.cookie+" is deleted");
-	}
-
-	function update(data, elementId_suffix) {
-		var element = document.getElementById("progress_"+elementId_suffix);
+	function update(topicId) {
+		var element = document.getElementById("progress");
 		element.style.display = "block";
-		fetch(contextRoot+"/process/status/+"/"+data.topicId, {
+		fetch(contextRoot+"/process/status/"+topicId, {
 			method: "get"
 		})
 		.then(function(response) {
@@ -62,21 +51,21 @@
 				element.style.width =  "100%";
 				element.innerHTML = json.title + ":" + "100%";
 				setTimeout(function(){
-					alert("Finished Uploading");
 					element.style.display = "none";
+					list();
 				},1000);
 			} else {
 				console.log(json);
 				element.style.width = json.percentage * 1 + "%";
 				element.innerHTML = json.title + ":" + json.percentage  + "%";
-				update(json, elementId_suffix);
+				update(topicId);
 			}
 		  });
 		}).catch(err => alert(err.error));
 	}
 
-	function upload(projectId) {
-		const inputFile = document.getElementById("file_"+projectId);
+	function upload() {
+		const inputFile = document.getElementById("file");
 		const formData = new FormData();
 		for (const file of inputFile.files) {
 			formData.append("file", file);
@@ -89,47 +78,26 @@
 		  // response.json() returns a promise, use the same .then syntax to work with the results
 		  response.json().then(function(json){
 			console.log(": "+json.percentage);
-			document.cookie = cookieAttribute+"="+json.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
-			update(json, projectId);
+			update(json.topicId);
 		  });
 		}).catch(err => alert(err.error));
 	}
 
-	function getCookie(name) {
-		function escape(s) { return s.replace(/([.*+?\^$(){}|\[\]\/\\])/g, '\\$1'); }
-		var match = document.cookie.match(RegExp('(?:^|;\\s*)' + escape(name) + '=([^;]*)'));
-		return match ? match[1] : null;
-	}
-
-	function onloadfun() {
-		var projectId = getCookie(cookieAttribute);
-		if(projectId && !(projectId === 'undefined' || projectId === null)) {
-			document.getElementById("firstUpload").style.display="none";
-			document.getElementById("revisionUpload").innerHTML = "<input id=\"file_"+projectId+"\" type=\"file\" style=\"width: 200px\"/>" +
-			"<button name=\"button\" value=\"OK\" type=\"button\" onclick=\"upload('"+projectId+"')\">Upload New Revision</button>" +
-			"<div id=\"progress_status_"+projectId+"\" class=\"progress_status\">" +
-			"<div \"id=\"progress_"+projectId+"\" class=\"progress\"></div></div>";
-			document.getElementById("revisionUpload").style.display="block";
-
-			fetch(contextRoot+"/project/"+projectId+"/revisions", {
+	function list(){
+		fetch(contextRoot+"/project/0/revisions", {
 				method: "get"
-			})
-			.then(function(response) {
-			  response.json().then(function(json){
-			  	var innerHTMLVal="<table><tr><th>Revision ID</th><th>Revision Description</th></tr>"
-			  	json.forEach((jsonEntry)=>{
-			  		innerHTMLVal=innerHTMLVal+"<tr><td>"+jsonEntry.revisionId+"</td><td>"+jsonEntry.description+"</td></tr>"
-			  	});
+		})
+		.then(function(response) {
+			response.json().then(function(json){
+				// TODO render nothing for empty list - not even empty table with headers
+				var innerHTMLVal="<table><tr><th>Revision ID</th><th>Revision Description</th></tr>"
+				json.forEach((jsonEntry)=>{
+					innerHTMLVal=innerHTMLVal+"<tr><td>"+jsonEntry.revisionId+"</td><td>"+jsonEntry.description+"</td></tr>"
+				});
 				document.getElementById("revisionsDetails").innerHTML=innerHTMLVal+"</table>"+
 				"<br/><br/><br/><br/><h1><u>Report</u></u></h1><br/><br/><br/><br/><h1><u>Map</u></u></h1>"
-				document.getElementById("revisionsDetails").style.display="block";
-			  });
-			}).catch(err => alert(err.error));
-		} else {
-			document.getElementById("firstUpload").style.display="block";
-			document.getElementById("revisionUpload").style.display="none";
-			document.getElementById("revisionsDetails").style.display="none";
-		}
+			});
+		}).catch(err => alert(err.error));
 	}
 	</script>
 

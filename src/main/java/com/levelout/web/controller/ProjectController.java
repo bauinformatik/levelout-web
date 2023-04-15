@@ -10,6 +10,7 @@ import org.apache.http.HttpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import javax.servlet.http.HttpSession;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,9 @@ import java.util.List;
 @RestController
 public class ProjectController {
     final static Log logger = LogFactory.getLog(ProjectController.class);
+
+    @Autowired
+    HttpSession session;
 
     @Autowired
     ProjectService projectService;
@@ -27,7 +31,9 @@ public class ProjectController {
     }
 
     @GetMapping("/project/{projectId}/revisions")
-    public ResponseEntity<List<RevisionDto>> getRevisions(@PathVariable long projectId) throws Exception {
+    public ResponseEntity<List<RevisionDto>> getRevisions(@PathVariable Long projectId) throws Exception {
+        projectId = (Long) session.getAttribute("projectId");
+        if(projectId==null) return ResponseEntity.ok(new ArrayList<>());
         return ResponseEntity.ok(projectService.getAllRevisions(projectId));
     }
 
