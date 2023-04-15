@@ -11,6 +11,7 @@ import org.bimserver.interfaces.objects.SRevision;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,9 @@ public class ProjectService {
 
 	@Autowired
 	PluginService pluginService;
+
+	@Value("${bimserver.plugin.key}")
+	private String pluginKey;
 
 	public void createProject(ProjectDto projectDto) throws ServerException, UserException {
 		SProject project = bimServerClient.getServiceInterface().addProject(

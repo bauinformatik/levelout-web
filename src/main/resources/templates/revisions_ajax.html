@@ -7,8 +7,6 @@
 
 	<title>LevelOut-Web</title>
 
-	<link rel="stylesheet"
-		  th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}" />
 	<link rel="stylesheet" th:href="@{/css/main.css}" />
 
 </head>
@@ -33,15 +31,21 @@
 	</div>
 </div>
 <div id="revisionUpload" style="display: none;">
+	<input th:attr="id=|file_1|" type="file" style="width: 200px"/>
+	<button name="button" value="OK" type="button"
+			th:attr="onclick=|upload('1')|">Upload New Revision</button>
+
+	<div th:attr="id=|progress_status_1|" class="progress_status">
+		<div th:attr="id=|progress_1|" class="progress"></div>
+	</div>
 </div>
 <div id="revisionsDetails" style="display: none;">
 </div>
-<script type="text/javascript"
-		th:src="@{webjars/bootstrap/4.2.1/js/bootstrap.min.js}"></script>
 
 <script>
 	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
 	var cookieAttribute = 'leveloutProjectId'
+	var projectId = getCookie(cookieAttribute);
 
 	var initAction = "[[${initAction}]]";
 	if(initAction == 'deleteCookie'){
@@ -75,8 +79,8 @@
 		}).catch(err => alert(err.error));
 	}
 
-	function upload(projectId) {
-		const inputFile = document.getElementById("file_"+projectId);
+	function upload(elementId_suffix) {
+		const inputFile = document.getElementById("file_"+elementId_suffix);
 		const formData = new FormData();
 		for (const file of inputFile.files) {
 			formData.append("file", file);
@@ -90,7 +94,7 @@
 		  response.json().then(function(json){
 			console.log(": "+json.percentage);
 			document.cookie = cookieAttribute+"="+json.projectId+"; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
-			update(json, projectId);
+			update(json, elementId_suffix);
 		  });
 		}).catch(err => alert(err.error));
 	}
@@ -102,15 +106,9 @@
 	}
 
 	function onloadfun() {
-		var projectId = getCookie(cookieAttribute);
 		if(projectId && !(projectId === 'undefined' || projectId === null)) {
 			document.getElementById("firstUpload").style.display="none";
-			document.getElementById("revisionUpload").innerHTML = "<input id=\"file_"+projectId+"\" type=\"file\" style=\"width: 200px\"/>" +
-			"<button name=\"button\" value=\"OK\" type=\"button\" onclick=\"upload('"+projectId+"')\">Upload New Revision</button>" +
-			"<div id=\"progress_status_"+projectId+"\" class=\"progress_status\">" +
-			"<div \"id=\"progress_"+projectId+"\" class=\"progress\"></div></div>";
 			document.getElementById("revisionUpload").style.display="block";
-
 			fetch(contextRoot+"/project/"+projectId+"/revisions", {
 				method: "get"
 			})
@@ -126,6 +124,7 @@
 			  });
 			}).catch(err => alert(err.error));
 		} else {
+		    projectId = '0';
 			document.getElementById("firstUpload").style.display="block";
 			document.getElementById("revisionUpload").style.display="none";
 			document.getElementById("revisionsDetails").style.display="none";

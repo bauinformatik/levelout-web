@@ -6,6 +6,7 @@ import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -20,12 +21,18 @@ public class PluginService {
     @Autowired
     BimServerClientWrapper bimServerClient;
 
+    @Value("${bimserver.plugin.key}")
+    private String pluginKey;
+
+    @Value("${bimserver.plugin.defaultWriteExtendedData}")
+    private String defaultWriteExtendedData;
+
     public void addLevelOutServiceToProject(SProject project) throws ServerException, UserException {
-        Optional<SServiceDescriptor> levelOut = bimServerClient.getServiceInterface().getAllLocalServiceDescriptors().stream().filter((serviceDescriptor -> serviceDescriptor.getName().startsWith("LevelOut"))).findFirst();
+        Optional<SServiceDescriptor> levelOut = bimServerClient.getServiceInterface().getAllLocalServiceDescriptors().stream().filter((serviceDescriptor -> serviceDescriptor.getName().startsWith(pluginKey))).findFirst();
         if (levelOut.isEmpty()) Assert.fail("service not found");
         SServiceDescriptor serviceDescriptor = levelOut.get();
         SProfileDescriptor profile = bimServerClient.getServiceInterface().getAllLocalProfiles(serviceDescriptor.getIdentifier()).get(0);
-        SExtendedDataSchema writeExtendedDataSchema = bimServerClient.getServiceInterface().getExtendedDataSchemaByName(serviceDescriptor.getWriteExtendedData());
+        SExtendedDataSchema writeExtendedDataSchema = bimServerClient.getServiceInterface().getExtendedDataSchemaByName(serviceDescriptor.getWriteExtendedData()==null?defaultWriteExtendedData:serviceDescriptor.getWriteExtendedData());
         SService service = createService(serviceDescriptor, profile, writeExtendedDataSchema);
         bimServerClient.getServiceInterface().addLocalServiceToProject(project.getOid(), service, Long.valueOf(service.getProfileIdentifier()));
     }
