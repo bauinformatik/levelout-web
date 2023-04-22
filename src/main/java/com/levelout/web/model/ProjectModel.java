@@ -3,7 +3,7 @@ package com.levelout.web.model;
 import com.levelout.web.enums.IfcSchema;
 import org.bimserver.interfaces.objects.SSIPrefix;
 
-public class ProjectDto {
+public class ProjectModel {
 	long projectId;
 	String name;
 	String description;

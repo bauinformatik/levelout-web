@@ -1,6 +1,6 @@
 package com.levelout.web.model;
 
-public class RevisionDto {
+public class RevisionModel {
 	long revisionId;
 	String description;
 

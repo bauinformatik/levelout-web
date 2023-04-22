@@ -4,7 +4,7 @@ import com.levelout.web.enums.ProcessStatusType;
 import com.levelout.web.enums.ProcessType;
 import org.bimserver.interfaces.objects.SActionState;
 
-public class ProcessDto {
+public class ProcessModel {
     long projectId;
     String title;
     long topicId;

@@ -2,10 +2,12 @@ package com.levelout.web.controller;
 
 import com.levelout.web.constants.CommonConstants;
 import com.levelout.web.enums.IfcSchema;
-import com.levelout.web.model.ProcessDto;
-import com.levelout.web.model.ProjectDto;
+import com.levelout.web.model.ProcessModel;
+import com.levelout.web.model.ProjectModel;
+import com.levelout.web.model.TransactionDataModel;
 import com.levelout.web.service.ProcessService;
 import com.levelout.web.service.ProjectService;
+import com.levelout.web.service.TransactionDataService;
 import com.levelout.web.utils.DateTimeUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
@@ -28,57 +30,51 @@ public class ProcessController {
     @Autowired
     ProjectService projectService;
 
-    @PostMapping("/process/checkIn/{projectId}")
-    public ResponseEntity<ProcessDto> checkIn(
-            @PathVariable long projectId, @RequestParam MultipartFile file
+    @Autowired
+    TransactionDataService transactionDataService;
+
+    @PostMapping("/process/checkIn")
+    public ResponseEntity<ProcessModel> checkIn(
+            @RequestParam MultipartFile file
     ) throws Exception {
-        return checkInForSchema(projectId, file, IfcSchema.ifc4);
+        return checkInForSchema(file, IfcSchema.ifc4);
     }
 
-    @PostMapping("/process/checkIn/{projectId}/{schema}")
-    public ResponseEntity<ProcessDto> checkIn(
-            @PathVariable long projectId, @PathVariable IfcSchema schema, @RequestParam MultipartFile file
+    @PostMapping("/process/checkIn/{schema}")
+    public ResponseEntity<ProcessModel> checkIn(
+            @PathVariable IfcSchema schema, @RequestParam MultipartFile file
     ) throws Exception {
-        return checkInForSchema(projectId, file, schema);
+        return checkInForSchema(file, schema);
     }
 
-    private ResponseEntity<ProcessDto> checkInForSchema(long projectId, MultipartFile file, IfcSchema schema) throws Exception {
+    private ResponseEntity<ProcessModel> checkInForSchema(MultipartFile file, IfcSchema schema) throws Exception {
         boolean isNew = false;
-        if(projectId ==0) {
+        TransactionDataModel transactionData = transactionDataService.getTransactionData();
+        if(transactionData==null) {
             String fileNameWithOutExt = FilenameUtils.removeExtension(file.getOriginalFilename());
-            ProjectDto project = new ProjectDto();
+            ProjectModel project = new ProjectModel();
             project.setDescription(fileNameWithOutExt);
             project.setName(fileNameWithOutExt+"_"+ DateTimeUtils.getCurrentlyDateTime());
             project.setSchema(schema);
             project.setExportLengthMeasurePrefix(SSIPrefix.meter);
             projectService.createProject(project);
-            projectId = project.getProjectId();
+            transactionData = transactionDataService.setTransactionData(project.getProjectId());
             isNew = true;
         }
-        logger.info("CheckIn process about to start for projectId: "+ projectId);
-        return ResponseEntity.ok(processService.checkIn(projectId, file, isNew));
+        logger.info("CheckIn process about to start for projectId: "+ transactionData.getProjectId());
+        return ResponseEntity.ok(processService.checkIn(transactionData.getProjectId(), file, isNew));
     }
 
-    @GetMapping("/process/status/{projectId}/{topicId}")
-    public ResponseEntity<ProcessDto> getProcessStatus(
-            @PathVariable long projectId, @PathVariable long topicId
+    @GetMapping("/process/status/{topicId}")
+    public ResponseEntity<ProcessModel> getProcessStatus(
+            @PathVariable long topicId
     ) throws Exception {
-        return ResponseEntity.ok(processService.getProcessStatus(projectId, topicId));
-    }
-
-    @GetMapping("/process/progress/{projectId}")
-    public ResponseEntity<String> getProcessTopicsForProject(
-            @PathVariable long projectId
-    ) throws Exception {
-        processService.getProgress(projectId);
-        return ResponseEntity.ok(CommonConstants.SUCCESS);
+        return ResponseEntity.ok(processService.getProcessStatus(transactionDataService.getTransactionData().getProjectId(), topicId));
     }
 
     @GetMapping("/process/progress")
-    public ResponseEntity<String> getAllProcessTopics(
-            @PathVariable long projectId
-    ) throws Exception {
-        processService.getProgress(projectId);
+    public ResponseEntity<String> getProcessTopicsForProject() throws Exception {
+        processService.getProgress(transactionDataService.getTransactionData().getProjectId());
         return ResponseEntity.ok(CommonConstants.SUCCESS);
     }
 

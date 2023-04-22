@@ -1,7 +1,8 @@
 package com.levelout.web.controller;
 
-import com.levelout.web.model.RevisionDto;
+import com.levelout.web.model.RevisionModel;
 import com.levelout.web.service.ProjectService;
+import com.levelout.web.service.TransactionDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,9 @@ import java.util.List;
 @Controller
 public class HomeController {
 
+	@Autowired
+	TransactionDataService transactionDataService;
+
 	@Value("${welcome.message}")
 	private String message;
 
@@ -25,6 +29,7 @@ public class HomeController {
 		try {
 			model.addAttribute("message", message);
 			model.addAttribute("initAction", initAction);
+			model.addAttribute("projectId", transactionDataService.getProjectId());
 		} catch (Exception e) {
 			return "error";
 		}
@@ -42,11 +47,10 @@ public class HomeController {
 	}
 
 	@GetMapping("/project")
-	public String myProject(
-			@RequestParam(name = "leveloutProjectId") Long projectId,
-			Model model) {
+	public String myProject(Model model) {
 		try {
-			List<RevisionDto> revisions = projectService.getAllRevisions(projectId);
+			Long projectId = transactionDataService.getProjectId();
+			List<RevisionModel> revisions = projectService.getAllRevisions(projectId);
 			model.addAttribute("message", message);
 
 			if(projectId==null || projectId==0)

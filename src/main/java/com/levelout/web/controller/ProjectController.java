@@ -1,9 +1,10 @@
 package com.levelout.web.controller;
 
 import com.levelout.web.constants.CommonConstants;
-import com.levelout.web.model.ProjectDto;
-import com.levelout.web.model.RevisionDto;
+import com.levelout.web.model.ProjectModel;
+import com.levelout.web.model.RevisionModel;
 import com.levelout.web.service.ProjectService;
+import com.levelout.web.service.TransactionDataService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
@@ -21,31 +22,34 @@ public class ProjectController {
     @Autowired
     ProjectService projectService;
 
+    @Autowired
+    TransactionDataService transactionDataService;
+
     @GetMapping("/project/{projectId}")
-    public ResponseEntity<ProjectDto> get(@PathVariable long projectId) throws Exception {
+    public ResponseEntity<ProjectModel> get(@PathVariable long projectId) throws Exception {
         return ResponseEntity.ok(projectService.getProjectById(projectId));
     }
 
-    @GetMapping("/project/{projectId}/revisions")
-    public ResponseEntity<List<RevisionDto>> getRevisions(@PathVariable long projectId) throws Exception {
-        return ResponseEntity.ok(projectService.getAllRevisions(projectId));
+    @GetMapping("/project/revisions")
+    public ResponseEntity<List<RevisionModel>> getRevisions() throws Exception {
+        return ResponseEntity.ok(projectService.getAllRevisions(transactionDataService.getProjectId()));
     }
 
     @GetMapping("/project/projectName/{projectName}")
-    public ResponseEntity<List<ProjectDto>> get(@PathVariable String projectName) throws Exception {
+    public ResponseEntity<List<ProjectModel>> get(@PathVariable String projectName) throws Exception {
         return ResponseEntity.ok(projectService.getProjectsByName(projectName));
     }
 
     @PutMapping(value = "/project")
-    public ResponseEntity<ProjectDto> create(@RequestBody ProjectDto projectDto) throws Exception {
-        projectService.createProject(projectDto);
-        return ResponseEntity.ok(projectDto);
+    public ResponseEntity<ProjectModel> create(@RequestBody ProjectModel projectModel) throws Exception {
+        projectService.createProject(projectModel);
+        return ResponseEntity.ok(projectModel);
     }
 
 	@PostMapping(value = "/project")
-    public ResponseEntity<ProjectDto> update(@RequestBody ProjectDto projectDto) throws Exception {
-        projectService.updateProject(projectDto);
-        return ResponseEntity.ok(projectDto);
+    public ResponseEntity<ProjectModel> update(@RequestBody ProjectModel projectModel) throws Exception {
+        projectService.updateProject(projectModel);
+        return ResponseEntity.ok(projectModel);
     }
 
     @DeleteMapping("/project")

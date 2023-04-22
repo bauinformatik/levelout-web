@@ -2,8 +2,8 @@ package com.levelout.web.service;
 
 import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.enums.IfcSchema;
-import com.levelout.web.model.ProjectDto;
-import com.levelout.web.model.RevisionDto;
+import com.levelout.web.model.ProjectModel;
+import com.levelout.web.model.RevisionModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.SProject;
@@ -35,27 +35,27 @@ public class ProjectService {
 	@Value("${bimserver.plugin.key}")
 	private String pluginKey;
 
-	public void createProject(ProjectDto projectDto) throws ServerException, UserException {
+	public void createProject(ProjectModel projectModel) throws ServerException, UserException {
 		SProject project = bimServerClient.getServiceInterface().addProject(
-				projectDto.getName(),
-				projectDto.getSchema().name()
+				projectModel.getName(),
+				projectModel.getSchema().name()
 		);
-		projectDto.setProjectId(project.getOid());
-		updateProjectDetails(projectDto, project);
+		projectModel.setProjectId(project.getOid());
+		updateProjectDetails(projectModel, project);
 
 		pluginService.addLevelOutServiceToProject(project);
 	}
 
-	public void updateProject(ProjectDto projectDto) throws ServerException, UserException {
-		SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectDto.getProjectId());
-		updateProjectDetails(projectDto, project);
+	public void updateProject(ProjectModel projectModel) throws ServerException, UserException {
+		SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectModel.getProjectId());
+		updateProjectDetails(projectModel, project);
 	}
 
-	private void updateProjectDetails(ProjectDto projectDto, SProject project) throws ServerException, UserException {
-		project.setName(projectDto.getName());
-		project.setSchema(projectDto.getSchema().name());
-		project.setExportLengthMeasurePrefix(projectDto.getExportLengthMeasurePrefix());
-		project.setDescription(projectDto.getDescription());
+	private void updateProjectDetails(ProjectModel projectModel, SProject project) throws ServerException, UserException {
+		project.setName(projectModel.getName());
+		project.setSchema(projectModel.getSchema().name());
+		project.setExportLengthMeasurePrefix(projectModel.getExportLengthMeasurePrefix());
+		project.setDescription(projectModel.getDescription());
 		bimServerClient.getServiceInterface().updateProject(project);
 	}
 
@@ -79,35 +79,35 @@ public class ProjectService {
 		return failedIds;
 	}
 
-	public ProjectDto getProjectById(long projectId) throws ServerException, UserException {
+	public ProjectModel getProjectById(long projectId) throws ServerException, UserException {
 		SProject sProject = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
 		return mapSProjectToProject(sProject);
 	}
 
-	public List<ProjectDto> getProjectsByName(String projectName) throws ServerException, UserException {
+	public List<ProjectModel> getProjectsByName(String projectName) throws ServerException, UserException {
 		List<SProject> projects = bimServerClient.getServiceInterface().getProjectsByName(projectName);
 		return projects.stream().map(this::mapSProjectToProject).collect(Collectors.toList());
 	}
 
-	public List<ProjectDto> getAllProjects() throws ServerException, UserException {
+	public List<ProjectModel> getAllProjects() throws ServerException, UserException {
 		List<SProject> projects = bimServerClient.getServiceInterface().getAllProjects(true, true);
 		return projects.stream().map(this::mapSProjectToProject).collect(Collectors.toList());
 	}
 
-	public List<RevisionDto> getAllRevisions(long projectId) throws ServerException, UserException {
+	public List<RevisionModel> getAllRevisions(long projectId) throws ServerException, UserException {
 		List<SRevision> revisions = bimServerClient.getServiceInterface().getAllRevisionsOfProject(projectId);
 		return revisions.stream().map(this::mapSRevisionToRevision).collect(Collectors.toList());
 	}
 
-	private RevisionDto mapSRevisionToRevision(SRevision sRevision) {
-		RevisionDto revisionDto = new RevisionDto();
-		revisionDto.setRevisionId(sRevision.getOid());
-		revisionDto.setDescription(sRevision.getComment());
-		return revisionDto;
+	private RevisionModel mapSRevisionToRevision(SRevision sRevision) {
+		RevisionModel revisionModel = new RevisionModel();
+		revisionModel.setRevisionId(sRevision.getOid());
+		revisionModel.setDescription(sRevision.getComment());
+		return revisionModel;
 	}
 
-	private ProjectDto mapSProjectToProject(SProject sProject) {
-		ProjectDto project = new ProjectDto();
+	private ProjectModel mapSProjectToProject(SProject sProject) {
+		ProjectModel project = new ProjectModel();
 		project.setProjectId(sProject.getOid());
 		project.setDescription(sProject.getDescription());
 		project.setName(sProject.getName());

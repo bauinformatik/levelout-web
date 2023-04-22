@@ -3,7 +3,7 @@ package com.levelout.web.service;
 import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.enums.ProcessStatusType;
 import com.levelout.web.enums.ProcessType;
-import com.levelout.web.model.ProcessDto;
+import com.levelout.web.model.ProcessModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.*;
@@ -22,7 +22,7 @@ public class ProcessService {
     @Autowired
     AsyncCheckinService asyncCheckinService;
 
-    public ProcessDto checkIn(long projectId, MultipartFile bimFile, boolean isNew) throws Exception {
+    public ProcessModel checkIn(long projectId, MultipartFile bimFile, boolean isNew) throws Exception {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
         logger.info("CheckIn Process Prepared");
@@ -31,13 +31,13 @@ public class ProcessService {
         return getProcessStatus(projectId, topicId);
     }
 
-    public ProcessDto getProcessStatus(long projectId, long topicId) throws ServerException, UserException, InterruptedException {
+    public ProcessModel getProcessStatus(long projectId, long topicId) throws ServerException, UserException, InterruptedException {
         SLongActionState progress = bimServerClient.getRegistry().getProgress(topicId);
         return mapToProcessDto(projectId, topicId, progress);
     }
 
-    private ProcessDto mapToProcessDto(long projectId, long topicId, SLongActionState progress) {
-        ProcessDto process = new ProcessDto();
+    private ProcessModel mapToProcessDto(long projectId, long topicId, SLongActionState progress) {
+        ProcessModel process = new ProcessModel();
         process.setProjectId(projectId);
         process.setTopicId(topicId);
         process.setProcessStatusType(ProcessStatusType.IN_PROGRESS);
