@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -30,6 +31,11 @@ public class HomeController {
 			model.addAttribute("message", message);
 			model.addAttribute("initAction", initAction);
 			model.addAttribute("projectId", transactionDataService.getProjectId());
+			model.addAttribute("revisions",
+					transactionDataService.getProjectId()==null || transactionDataService.getProjectId()==0 ?
+							new ArrayList<>() :
+							projectService.getAllRevisions(transactionDataService.getProjectId())
+			);
 		} catch (Exception e) {
 			return "error";
 		}
