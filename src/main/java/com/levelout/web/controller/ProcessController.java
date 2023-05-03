@@ -33,25 +33,37 @@ public class ProcessController {
     @Autowired
     TransactionDataService transactionDataService;
 
-    @PostMapping("/process/checkIn")
+    @PostMapping("/process/prepareCheckIn")
     public ResponseEntity<ProcessModel> checkIn(
-            @RequestParam MultipartFile file
+            @RequestParam String file
     ) throws Exception {
         return checkInForSchema(file, IfcSchema.ifc4);
     }
 
-    @PostMapping("/process/checkIn/{schema}")
+    @PostMapping("/process/prepareCheckIn/{schema}")
     public ResponseEntity<ProcessModel> checkIn(
-            @PathVariable IfcSchema schema, @RequestParam MultipartFile file
+            @PathVariable IfcSchema schema, @RequestParam String file
     ) throws Exception {
         return checkInForSchema(file, schema);
     }
 
-    private ResponseEntity<ProcessModel> checkInForSchema(MultipartFile file, IfcSchema schema) throws Exception {
+    @PostMapping("/process/checkIn/{topicId}")
+    public ResponseEntity<ProcessModel> checkIn(
+            @PathVariable long topicId,
+            @RequestParam MultipartFile file
+    ) throws Exception {
+        return ResponseEntity.ok(
+                processService.checkIn(
+                        transactionDataService.getTransactionData().getProjectId(), file, topicId
+                )
+        );
+    }
+
+    private ResponseEntity<ProcessModel> checkInForSchema(String file, IfcSchema schema) throws Exception {
         boolean isNew = false;
         TransactionDataModel transactionData = transactionDataService.getTransactionData();
         if(transactionData==null) {
-            String fileNameWithOutExt = FilenameUtils.removeExtension(file.getOriginalFilename());
+            String fileNameWithOutExt = FilenameUtils.removeExtension(file);
             ProjectModel project = new ProjectModel();
             project.setDescription(fileNameWithOutExt);
             project.setName(fileNameWithOutExt+"_"+ DateTimeUtils.getCurrentlyDateTime());
@@ -59,10 +71,9 @@ public class ProcessController {
             project.setExportLengthMeasurePrefix(SSIPrefix.meter);
             projectService.createProject(project);
             transactionData = transactionDataService.setTransactionData(project.getProjectId());
-            isNew = true;
         }
         logger.info("CheckIn process about to start for projectId: "+ transactionData.getProjectId());
-        return ResponseEntity.ok(processService.checkIn(transactionData.getProjectId(), file, isNew));
+        return ResponseEntity.ok(processService.prepareCheckIn(transactionData.getProjectId()));
     }
 
     @GetMapping("/process/status/{topicId}")

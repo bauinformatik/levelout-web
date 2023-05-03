@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 @Service
 public class ProcessService {
     final static Log logger = LogFactory.getLog(ProcessService.class);
@@ -22,16 +24,23 @@ public class ProcessService {
     @Autowired
     AsyncCheckinService asyncCheckinService;
 
-    public ProcessModel checkIn(long projectId, MultipartFile bimFile, boolean isNew) throws Exception {
+    public ProcessModel prepareCheckIn(long projectId) throws Exception {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
         logger.info("CheckIn Process Prepared");
+        //checkIn(projectId, bimFile, topicId);
+        return getProcessStatus(projectId, topicId);
+    }
+
+    public ProcessModel checkIn(long projectId, MultipartFile bimFile, long topicId) throws UserException, ServerException, IOException {
+        SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
+        logger.info("Starting CheckIn Process now");
         asyncCheckinService.checkInAsync(projectId, bimFile, pluginConfig, topicId);
         logger.info("CheckIn Process Added to Queue");
         return getProcessStatus(projectId, topicId);
     }
 
-    public ProcessModel getProcessStatus(long projectId, long topicId) throws ServerException, UserException, InterruptedException {
+    public ProcessModel getProcessStatus(long projectId, long topicId) throws ServerException, UserException {
         SLongActionState progress = bimServerClient.getRegistry().getProgress(topicId);
         return mapToProcessDto(projectId, topicId, progress);
     }

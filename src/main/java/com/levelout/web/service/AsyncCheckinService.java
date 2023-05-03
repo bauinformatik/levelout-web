@@ -20,7 +20,6 @@ public class AsyncCheckinService {
     @Autowired
     BimServerClientWrapper bimServerClient;
 
-    @Async
     public void checkInAsync(long projectId, MultipartFile bimFile, SDeserializerPluginConfiguration pluginConfig, long topicId) throws UserException, ServerException, IOException {
         logger.info("Starting check-in process for the project: "+projectId);
         String revisionDescription = bimFile.getOriginalFilename() + " uploaded at " + DateTimeUtils.getCurrentlyDateTime();

@@ -19,7 +19,7 @@
 <h1><u>IFC</u></u></h1>
 <div id="revisionUpload">
 	<input th:attr="id=|file_upload|" type="file" style="width: 200px"/>
-	<button name="button" value="OK" type="button" th:attr="onclick=|upload()|">Upload New Revision</button>
+	<button name="button" value="OK" type="button" th:attr="onclick=|startUpload()|">Upload New Revision</button>
 
 	<div th:attr="id=|progress_status|" class="progress_status">
 		<div th:attr="id=|progress|" class="progress"></div>
@@ -72,22 +72,28 @@
 		}).catch(err => alert(err.error));
 	}
 
-	function upload() {
+	function startUpload() {
+		const inputFile = document.getElementById("file_upload");
+		const encodedUrl = encodeURI("/process/prepareCheckIn?file="+inputFile.value);
+		fetch(contextRoot+encodedUrl, {
+			method: "post"
+		})
+		.then(function(response) {
+		  response.json().then(function(json){
+		  	uploadFile(json);
+		  	update(json);
+		  });
+		}).catch(err => alert(err.error));
+	}
+	function uploadFile(data) {
 		const inputFile = document.getElementById("file_upload");
 		const formData = new FormData();
 		for (const file of inputFile.files) {
 			formData.append("file", file);
 		}
-		fetch(contextRoot+"/process/checkIn", {
+		fetch(contextRoot+"/process/checkIn/"+data.topicId, {
 			method: "post",
 			body: formData
-		})
-		.then(function(response) {
-		  // response.json() returns a promise, use the same .then syntax to work with the results
-		  response.json().then(function(json){
-			console.log(": "+json.percentage);
-			update(json);
-		  });
 		}).catch(err => alert(err.error));
 	}
 	</script>
