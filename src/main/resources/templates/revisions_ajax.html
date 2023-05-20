@@ -27,16 +27,21 @@
 </div>
 <div id="revisionsDetails">
 	<table>
-		<tr><th>Revision ID</th><th>Revision Description</th></tr>
+		<tr><th>Revision ID</th><th>Revision Description</th><th>Reports</th><th>Map</th></tr>
 
 		<th:block th:each="revision : ${revisions}">
 			<tr>
 				<td><p th:text="${revision.revisionId}"></p></td>
 				<td><p th:text="${revision.description}"></p></td>
+				<td>
+					<div th:each="report : ${revision.reports}">
+						<button th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
+					</div>
+				</td>
+				<td><p th:text="${revision.map}"></p></td>
 			</tr>
 		</th:block>
 	</table>
-	<br/><br/><br/><br/><h1><u>Report</u></u></h1><br/><br/><br/><br/><h1><u>Map</u></u></h1>
 </div>
 
 <script>
@@ -85,6 +90,7 @@
 		  });
 		}).catch(err => alert(err.error));
 	}
+
 	function uploadFile(data) {
 		const inputFile = document.getElementById("file_upload");
 		const formData = new FormData();
@@ -96,6 +102,33 @@
 			body: formData
 		}).catch(err => alert(err.error));
 	}
+
+	function downloadReport(reportId, title) {
+		fetch(contextRoot+'/project/download/report/'+reportId)
+		.then(response => {
+			if (!response.ok) {
+			  throw new Error(response);
+			}
+			// Extract filename from header
+			const filename = response.headers.get('content-disposition')
+			  .split(';')
+			  .find(n => n.includes('filename='))
+			  .replace('filename=', '')
+			  .trim();
+			response.blob().then(blob => {
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.style.display = 'none';
+				a.href = url;
+				// the filename you want
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				window.URL.revokeObjectURL(url);
+				alert('Report: '+filename+' has downloaded!');
+			})
+		})
+  	}
 	</script>
 
 </body>

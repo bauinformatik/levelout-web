@@ -8,10 +8,12 @@ import com.levelout.web.service.TransactionDataService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
+import org.bimserver.interfaces.objects.SFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,5 +92,15 @@ public class ProjectController {
             throw new HttpException(failedIds.toString());
         }
         return ResponseEntity.ok(CommonConstants.SUCCESS);
+    }
+
+    @GetMapping("/project/download/report/{reportId}")
+    public void downloadReport(@PathVariable Integer reportId, HttpServletResponse response) throws Exception {
+        SFile reportData = projectService.getReportData(reportId);
+        byte[] reportArray = reportData.getData();
+        response.setContentType(reportData.getMime());
+        response.setHeader("Content-Length", Long.toString(reportArray.length));
+        response.setHeader("Content-Disposition", "attachment; filename="+reportData.getFilename());
+        response.getOutputStream().write(reportArray);
     }
 }

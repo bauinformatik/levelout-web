@@ -6,8 +6,7 @@ import com.levelout.web.model.ProjectModel;
 import com.levelout.web.model.RevisionModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bimserver.interfaces.objects.SProject;
-import org.bimserver.interfaces.objects.SRevision;
+import org.bimserver.interfaces.objects.*;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,6 +102,23 @@ public class ProjectService {
 		RevisionModel revisionModel = new RevisionModel();
 		revisionModel.setRevisionId(sRevision.getOid());
 		revisionModel.setDescription(sRevision.getComment());
+		try {
+			List<SExtendedData> services = bimServerClient.getServiceInterface().getAllExtendedDataOfRevision(sRevision.getOid());
+			revisionModel.setReports(
+					services.stream().collect(
+							Collectors.toMap(
+									extendedData -> extendedData.getFileId(),
+									extendedData -> extendedData.getTitle()
+							)
+					)
+			);
+		} catch (ServerException e) {
+			logger.info("Could not set reports due to service exception for revision: " + sRevision.getOid());
+			e.printStackTrace();
+		} catch (UserException e) {
+			logger.info("Could not set reports due to user exception for revision: " + sRevision.getOid());
+			e.printStackTrace();
+		}
 		return revisionModel;
 	}
 
@@ -133,5 +149,9 @@ public class ProjectService {
 				e.printStackTrace();
 			}
 		});
+	}
+
+	public SFile getReportData(long reportId) throws ServerException, UserException {
+		return bimServerClient.getServiceInterface().getFile(reportId);
 	}
 }

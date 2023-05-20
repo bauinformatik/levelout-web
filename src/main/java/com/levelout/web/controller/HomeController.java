@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
@@ -68,5 +69,11 @@ public class HomeController {
 			return "error";
 		}
 		return "revisions";
+	}
+
+	// Added only for testing purpose.
+	@GetMapping("/setProject/{projectId}")
+	public void setTransactionData(@PathVariable Long projectId) {
+		transactionDataService.setTransactionData(projectId);
 	}
 }
