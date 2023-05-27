@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProcessService {
@@ -48,6 +52,7 @@ public class ProcessService {
     private ProcessModel mapToProcessDto(long projectId, long topicId, SLongActionState progress) {
         ProcessModel process = new ProcessModel();
         process.setProjectId(projectId);
+        process.setRevisionId(progress.getRid());
         process.setTopicId(topicId);
         process.setProcessStatusType(ProcessStatusType.IN_PROGRESS);
         process.setProcessType(ProcessType.CHECK_IN);
@@ -60,5 +65,30 @@ public class ProcessService {
     public void getProgress(Long projectId) throws Exception {
         SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
         bimServerClient.getServiceInterface().cleanupLongAction(project.getLastRevisionId());
+    }
+
+    public Map<Long, List<ProcessModel>> getStatusOfProcessesForProject(Long projectId) throws ServerException, UserException {
+        Map<Long, List<ProcessModel>> processMap = new HashMap<>();
+        bimServerClient.getRegistry()
+                .getProgressTopicsOnProject(projectId)
+                .stream()
+                .map(topicId-> {
+                    try {
+                        return getProcessStatus(projectId, topicId);
+                    } catch (ServerException e) {
+                        throw new RuntimeException(e);
+                    } catch (UserException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).forEach(processModel -> {
+                    List<ProcessModel> processesForRevision = processMap.get(processModel.getRevisionId());
+                    if(processesForRevision==null) {
+                        processesForRevision = new ArrayList<>();
+                        processMap.put(processModel.getRevisionId(), processesForRevision);
+                    }
+                    processesForRevision.add(processModel);
+                });
+
+        return processMap;
     }
 }

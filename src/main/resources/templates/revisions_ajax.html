@@ -27,11 +27,10 @@
 </div>
 <div id="revisionsDetails">
 	<table>
-		<tr><th>Revision ID</th><th>Revision Description</th><th>Reports</th><th>Map</th></tr>
+		<tr><th>Revision Description</th><th>Reports</th><th>Map</th></tr>
 
 		<th:block th:each="revision : ${revisions}">
 			<tr>
-				<td><p th:text="${revision.revisionId}"></p></td>
 				<td><p th:text="${revision.description}"></p></td>
 				<td>
 					<div th:each="report : ${revision.reports}">

@@ -13,13 +13,15 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.SSIPrefix;
+import org.bimserver.shared.exceptions.ServerException;
+import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class ProcessController {
@@ -89,11 +91,12 @@ public class ProcessController {
         return ResponseEntity.ok(CommonConstants.SUCCESS);
     }
 
-    public static void main(String args[]) {
-        List<Integer> num = Arrays.asList(1,2,3,4);
-        num.stream().filter(s->s%2==1).mapToInt(s->s.intValue()).sum();
-        System.out.println(
-
+    @GetMapping("/process/services/status")
+    public ResponseEntity<Map<Long, List<ProcessModel>>> getStatusForAll() throws Exception {
+        return ResponseEntity.ok(
+                processService.getStatusOfProcessesForProject(
+                        transactionDataService.getProjectId()
+                )
         );
     }
 }

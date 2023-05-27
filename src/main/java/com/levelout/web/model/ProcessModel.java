@@ -6,6 +6,7 @@ import org.bimserver.interfaces.objects.SActionState;
 
 public class ProcessModel {
     long projectId;
+    long revisionId;
     String title;
     long topicId;
     long deserializerOid;
@@ -20,6 +21,14 @@ public class ProcessModel {
 
     public void setProjectId(long projectId) {
         this.projectId = projectId;
+    }
+
+    public long getRevisionId() {
+        return revisionId;
+    }
+
+    public void setRevisionId(long revisionId) {
+        this.revisionId = revisionId;
     }
 
     public String getTitle() {
