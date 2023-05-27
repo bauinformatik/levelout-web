@@ -52,13 +52,13 @@ public class ProcessService {
     private ProcessModel mapToProcessDto(long projectId, long topicId, SLongActionState progress) {
         ProcessModel process = new ProcessModel();
         process.setProjectId(projectId);
-        process.setRevisionId(progress.getRid());
         process.setTopicId(topicId);
         process.setProcessStatusType(ProcessStatusType.IN_PROGRESS);
         process.setProcessType(ProcessType.CHECK_IN);
         process.setPercentage(progress==null?1:progress.getProgress());
         process.setActionState(progress==null?SActionState.STARTED:progress.getState());
         process.setTitle(progress==null?"PROCESS IN QUEUE":progress.getTitle());
+        process.setRevisionId(progress==null?null:progress.getRid());
         return process;
     }
 
