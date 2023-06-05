@@ -27,9 +27,6 @@ public class ProcessService {
     @Autowired
     AsyncCheckinService asyncCheckinService;
 
-    @Value("#{${server.reports.serializers}}")
-    private Map<String,Long> serializers;
-
     public ProcessModel prepareCheckIn(long projectId) throws Exception {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
         long topicId = bimServerClient.getServiceInterface().initiateCheckin(projectId, pluginConfig.getOid());
@@ -100,9 +97,7 @@ public class ProcessService {
                 "\"field\":\"data\",\"include\":{\"type\":\"GeometryData\",\"fields\":[\"indices\",\"vertices\"," +
                 "\"normals\",\"colorsQuantized\"]}}}]}},\"queries\":[{\"includeAllFields\":true,\"include\":" +
                 "\"AllFields\"}]}";
-        // Commenting as getSerializerByName is not working
-        //SSerializerPluginConfiguration serializer = bimServerClient.getServiceInterface().getSerializerByName(serializerName);
-        SSerializerPluginConfiguration serializer = bimServerClient.getServiceInterface().getSerializerById(serializers.get(serializerName));
+        SSerializerPluginConfiguration serializer = bimServerClient.getServiceInterface().getSerializerByName(serializerName);
         long topicId = bimServerClient
                 .getServiceInterface().download(new HashSet<>(Arrays.asList(revisionId)), query, serializer.getOid(), false);
         return getProcessStatus(projectId, topicId);

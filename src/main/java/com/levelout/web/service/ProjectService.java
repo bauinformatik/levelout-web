@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class ProjectService {
 	final static Log logger = LogFactory.getLog(ProjectService.class);
 
-	@Value("#{'${server.reports.schemas}'.split(',')}")
+	@Value("#{'${bimserver.plugin.defaultWriteExtendedData}'.split(',')}")
 	private List<String> schemaNames;
 
 	@Autowired
