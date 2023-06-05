@@ -10,14 +10,13 @@ import org.bimserver.interfaces.objects.*;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.activation.DataHandler;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ProcessService {
@@ -27,6 +26,9 @@ public class ProcessService {
 
     @Autowired
     AsyncCheckinService asyncCheckinService;
+
+    @Value("#{${server.reports.serializers}}")
+    private Map<String,Long> serializers;
 
     public ProcessModel prepareCheckIn(long projectId) throws Exception {
         SDeserializerPluginConfiguration pluginConfig = bimServerClient.getServiceInterface().getSuggestedDeserializerForExtension("ifc", projectId);
@@ -58,7 +60,7 @@ public class ProcessService {
         process.setPercentage(progress==null?1:progress.getProgress());
         process.setActionState(progress==null?SActionState.STARTED:progress.getState());
         process.setTitle(progress==null?"PROCESS IN QUEUE":progress.getTitle());
-        process.setRevisionId(progress==null?null:progress.getRid());
+        process.setRevisionId(progress==null?0L:progress.getRid());
         return process;
     }
 
@@ -90,5 +92,24 @@ public class ProcessService {
                 });
 
         return processMap;
+    }
+
+    public ProcessModel initSerialization(Long revisionId, String serializerName, long projectId) throws ServerException, UserException {
+        String query = "{\"doublebuffer\":true,\"defines\":{\"AllFields\":{\"includeAllFields\":true,\"includes\":" +
+                "[\"AllFields\",{\"type\":\"IfcProduct\",\"field\":\"geometry\",\"include\":{\"type\":\"GeometryInfo\"," +
+                "\"field\":\"data\",\"include\":{\"type\":\"GeometryData\",\"fields\":[\"indices\",\"vertices\"," +
+                "\"normals\",\"colorsQuantized\"]}}}]}},\"queries\":[{\"includeAllFields\":true,\"include\":" +
+                "\"AllFields\"}]}";
+        // Commenting as getSerializerByName is not working
+        //SSerializerPluginConfiguration serializer = bimServerClient.getServiceInterface().getSerializerByName(serializerName);
+        SSerializerPluginConfiguration serializer = bimServerClient.getServiceInterface().getSerializerById(serializers.get(serializerName));
+        long topicId = bimServerClient
+                .getServiceInterface().download(new HashSet<>(Arrays.asList(revisionId)), query, serializer.getOid(), false);
+        return getProcessStatus(projectId, topicId);
+    }
+
+    public DataHandler downloadSerialized(long topicId) throws ServerException, UserException {
+        return bimServerClient
+                .getServiceInterface().getDownloadData(topicId).getFile();
     }
 }

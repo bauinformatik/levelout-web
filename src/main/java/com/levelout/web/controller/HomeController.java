@@ -1,10 +1,12 @@
 package com.levelout.web.controller;
 
+import com.levelout.web.constants.CommonConstants;
 import com.levelout.web.model.RevisionModel;
 import com.levelout.web.service.ProjectService;
 import com.levelout.web.service.TransactionDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,7 +75,8 @@ public class HomeController {
 
 	// Added only for testing purpose.
 	@GetMapping("/setProject/{projectId}")
-	public void setTransactionData(@PathVariable Long projectId) {
+	public ResponseEntity<String> setTransactionData(@PathVariable Long projectId) {
 		transactionDataService.setTransactionData(projectId);
+		return ResponseEntity.ok(CommonConstants.SUCCESS);
 	}
 }

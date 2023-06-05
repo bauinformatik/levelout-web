@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.activation.DataHandler;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +24,10 @@ import java.util.stream.Collectors;
 @Service
 public class ProjectService {
 	final static Log logger = LogFactory.getLog(ProjectService.class);
-	
+
+	@Value("#{'${server.reports.schemas}'.split(',')}")
+	private List<String> schemaNames;
+
 	@Autowired
 	BimServerClientWrapper bimServerClient;
 
@@ -102,23 +105,33 @@ public class ProjectService {
 		RevisionModel revisionModel = new RevisionModel();
 		revisionModel.setRevisionId(sRevision.getOid());
 		revisionModel.setDescription(sRevision.getComment());
-		try {
-			List<SExtendedData> services = bimServerClient.getServiceInterface().getAllExtendedDataOfRevision(sRevision.getOid());
-			revisionModel.setReports(
-					services.stream().collect(
-							Collectors.toMap(
-									extendedData -> extendedData.getFileId(),
-									extendedData -> extendedData.getTitle()
-							)
-					)
-			);
-		} catch (ServerException e) {
-			logger.info("Could not set reports due to service exception for revision: " + sRevision.getOid());
-			e.printStackTrace();
-		} catch (UserException e) {
-			logger.info("Could not set reports due to user exception for revision: " + sRevision.getOid());
-			e.printStackTrace();
-		}
+
+		List<SExtendedData> services = schemaNames.stream().map(schemaName-> {
+			try {
+				return bimServerClient.getServiceInterface().getLastExtendedDataOfRevisionAndSchema(
+						sRevision.getOid(),
+						bimServerClient.getServiceInterface().getExtendedDataSchemaByName(schemaName).getOid()
+				);
+			} catch (ServerException e) {
+				logger.info("Could not set reports due to service exception for revision: " + sRevision.getOid());
+				e.printStackTrace();
+			} catch (UserException e) {
+				logger.info("Could not set reports due to user exception for revision: " + sRevision.getOid());
+				e.printStackTrace();
+			}
+			return null;
+		}).collect(Collectors.toList());
+		revisionModel.setReports(
+				services.stream()
+						.filter(extendedData -> extendedData!=null)
+//							.filter(extendedData -> !extendedData.getTitle().toLowerCase().contains("geometry"))
+						.collect(
+								Collectors.toMap(
+										extendedData -> extendedData.getFileId(),
+										extendedData -> extendedData.getTitle()
+								)
+						)
+		);
 		return revisionModel;
 	}
 
@@ -140,15 +153,15 @@ public class ProjectService {
 	 */
 	@Scheduled(cron = "0 0 0 * * *", zone = "CET")
 	public void topicsCleanupAction() throws ServerException, UserException {
-		bimServerClient.getRegistry().getProgressTopicsOnServer().forEach(topic-> {
-			logger.error("Cleaning up started for topic: "+topic);
-			try {
-				bimServerClient.getServiceInterface().cleanupLongAction(topic);
-				logger.error("Cleaning up successful for topic: "+topic);
-			} catch (UserException | ServerException e) {
-				e.printStackTrace();
-			}
-		});
+//		bimServerClient.getRegistry().getProgressTopicsOnServer().forEach(topic-> {
+//			logger.error("Cleaning up started for topic: "+topic);
+//			try {
+//				bimServerClient.getServiceInterface().cleanupLongAction(topic);
+//				logger.error("Cleaning up successful for topic: "+topic);
+//			} catch (UserException | ServerException e) {
+//				e.printStackTrace();
+//			}
+//		});
 	}
 
 	public SFile getReportData(long reportId) throws ServerException, UserException {

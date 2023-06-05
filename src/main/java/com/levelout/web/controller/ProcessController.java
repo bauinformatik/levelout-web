@@ -20,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.activation.DataHandler;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -98,5 +100,20 @@ public class ProcessController {
                         transactionDataService.getProjectId()
                 )
         );
+    }
+
+    @PostMapping("/process/initSerialization/{revisionId}/{serializer}")
+    public ResponseEntity<ProcessModel> initSerialization(@PathVariable Long revisionId, @PathVariable String serializer) throws Exception {
+        return ResponseEntity.ok(processService.initSerialization(revisionId, serializer, transactionDataService.getProjectId()));
+    }
+
+    @GetMapping("/process/download/{topicId}")
+    public void download(@PathVariable long topicId, HttpServletResponse response) throws Exception {
+        DataHandler dataHandler = processService.downloadSerialized(topicId);
+        byte[] dataArray = dataHandler.getInputStream().readAllBytes();
+        response.setContentType(dataHandler.getContentType());
+        response.setHeader("Content-Length", Long.toString(dataArray.length));
+        response.setHeader("Content-Disposition", "attachment; filename="+dataHandler.getName());
+        response.getOutputStream().write(dataArray);
     }
 }

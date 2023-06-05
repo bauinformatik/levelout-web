@@ -27,7 +27,7 @@
 </div>
 <div id="revisionsDetails">
 	<table>
-		<tr><th>Revision Description</th><th>Reports</th><th>Map</th></tr>
+		<tr><th>Revision Description</th><th>Reports</th><th>Serialize&Download</th></tr>
 
 		<th:block th:each="revision : ${revisions}">
 			<tr>
@@ -37,7 +37,13 @@
 						<button th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
 					</div>
 				</td>
-				<td><p th:text="${revision.map}"></p></td>
+				<td>
+					<div>
+						<button th:text="CityGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'CityGML')|" ></button>
+						<button th:text="IndoorGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'IndoorGML')|" ></button>
+						<button th:text="OSM" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'OSM')|" ></button>
+					</div>
+				</td>
 			</tr>
 		</th:block>
 	</table>
@@ -101,6 +107,39 @@
 			body: formData
 		}).catch(err => alert(err.error));
 	}
+
+	function serializeAndDownload(revisionId, serializer) {
+		fetch(contextRoot+'/process/initSerialization/'+revisionId+'/'+serializer, {method: "post"})
+		.then(response => {
+			if (!response.ok) {
+			  throw new Error(response);
+			}
+			response.json().then(function(json){
+				fetch(contextRoot+'/process/download/'+json.topicId)
+				.then(response => {
+					// Extract filename from header
+					const filename = response.headers.get('content-disposition')
+					  .split(';')
+					  .find(n => n.includes('filename='))
+					  .replace('filename=', '')
+					  .trim();
+					response.blob().then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = filename;
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						alert('Report: '+filename+' has downloaded!');
+					})
+				})
+			})
+
+		})
+  	}
 
 	function downloadReport(reportId, title) {
 		fetch(contextRoot+'/project/download/report/'+reportId)

@@ -10,6 +10,7 @@ import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.ServiceException;
 import org.bimserver.shared.exceptions.UserException;
 import org.bimserver.shared.interfaces.NotificationRegistryInterface;
+import org.bimserver.shared.interfaces.PluginInterface;
 import org.bimserver.shared.interfaces.ServiceInterface;
 
 import java.io.InputStream;
@@ -53,6 +54,10 @@ public class BimServerClientWrapper {
 
     public ServiceInterface getServiceInterface() {
         return this.getClient().getServiceInterface();
+    }
+
+    public PluginInterface getPluginInterface() {
+        return this.getClient().getPluginInterface();
     }
 
     public NotificationRegistryInterface getRegistry() {
