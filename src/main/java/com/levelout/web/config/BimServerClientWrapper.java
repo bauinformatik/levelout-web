@@ -6,6 +6,7 @@ import org.bimserver.client.BimServerClient;
 import org.bimserver.client.json.JsonBimServerClientFactory;
 import org.bimserver.shared.ChannelConnectionException;
 import org.bimserver.shared.UsernamePasswordAuthenticationInfo;
+import org.bimserver.shared.exceptions.BimServerClientException;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.ServiceException;
 import org.bimserver.shared.exceptions.UserException;
@@ -13,7 +14,9 @@ import org.bimserver.shared.interfaces.NotificationRegistryInterface;
 import org.bimserver.shared.interfaces.PluginInterface;
 import org.bimserver.shared.interfaces.ServiceInterface;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 public class BimServerClientWrapper {
     final static Log logger = LogFactory.getLog(BimServerClientWrapper.class);
@@ -54,6 +57,10 @@ public class BimServerClientWrapper {
 
     public ServiceInterface getServiceInterface() {
         return this.getClient().getServiceInterface();
+    }
+
+    public InputStream getDownloadData(long topicId) throws IOException {
+        return this.getClient().getDownloadData(topicId);
     }
 
     public PluginInterface getPluginInterface() {

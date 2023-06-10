@@ -27,7 +27,7 @@
 </div>
 <div id="revisionsDetails">
 	<table>
-		<tr><th>Revision Description</th><th>Reports</th><th>Serialize&Download</th></tr>
+		<tr><th>Revision Description</th><th>Reports</th><th>Serialize&Download</th><th>Processes In Progress</th></tr>
 
 		<th:block th:each="revision : ${revisions}">
 			<tr>
@@ -44,6 +44,7 @@
 						<button th:text="OSM" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'OSM')|" ></button>
 					</div>
 				</td>
+				<td th:attr="id=|processes_${revision.revisionId}|"></td>
 			</tr>
 		</th:block>
 	</table>
@@ -54,6 +55,47 @@
 	function refreshPage(){
         window.location.reload();
     }
+
+	let previousProgressCount = -1;
+    function displayRunningProcesses() {
+		fetch(contextRoot+"/process/progressTopics", {
+			method: "get"
+		})
+		.then(function(response) {
+			response.json().then(function(jsonMap){
+				let progressCount = 0;
+				for(var revisionId in jsonMap){
+					var jsonArray = jsonMap[revisionId];
+					var element = document.getElementById("processes_"+revisionId);
+					element.innerHTML = '';
+					for ( var i = 0; i < jsonArray.length; i++) {
+						++progressCount;
+						var json = jsonArray[i];
+						element.innerHTML = element.innerHTML + json.title + ':<b style="color:red;">' + json.percentage + '</b></br>';
+					}
+				}
+
+				if(previousProgressCount==-1) {
+					previousProgressCount = progressCount;
+				}
+
+				if (progressCount < previousProgressCount) {
+					refreshPage();
+					return;
+				}
+
+        		if(progressCount>0) {
+        			setTimeout(function(){
+						displayRunningProcesses();
+					},1000);
+        		}
+			})
+		})
+	}
+
+	setTimeout(function(){
+		displayRunningProcesses();
+	},1000);
 
 	function update(data) {
 		var element = document.getElementById("progress");
@@ -109,35 +151,29 @@
 	}
 
 	function serializeAndDownload(revisionId, serializer) {
-		fetch(contextRoot+'/process/initSerialization/'+revisionId+'/'+serializer, {method: "post"})
+		fetch(contextRoot+'/process/download/'+revisionId+'/'+serializer, {method: "post"})
 		.then(response => {
 			if (!response.ok) {
 			  throw new Error(response);
 			}
-			response.json().then(function(json){
-				fetch(contextRoot+'/process/download/'+json.topicId)
-				.then(response => {
-					// Extract filename from header
-					const filename = response.headers.get('content-disposition')
-					  .split(';')
-					  .find(n => n.includes('filename='))
-					  .replace('filename=', '')
-					  .trim();
-					response.blob().then(blob => {
-						const url = window.URL.createObjectURL(blob);
-						const a = document.createElement('a');
-						a.style.display = 'none';
-						a.href = url;
-						// the filename you want
-						a.download = filename;
-						document.body.appendChild(a);
-						a.click();
-						window.URL.revokeObjectURL(url);
-						alert('Report: '+filename+' has downloaded!');
-					})
-				})
+			// Extract filename from header
+			const filename = response.headers.get('content-disposition')
+			  .split(';')
+			  .find(n => n.includes('filename='))
+			  .replace('filename=', '')
+			  .trim();
+			response.blob().then(blob => {
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.style.display = 'none';
+				a.href = url;
+				// the filename you want
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				window.URL.revokeObjectURL(url);
+				alert('Report: '+filename+' has downloaded!');
 			})
-
 		})
   	}
 
@@ -168,6 +204,5 @@
 		})
   	}
 	</script>
-
 </body>
 </html>

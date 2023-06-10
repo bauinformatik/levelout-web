@@ -4,19 +4,20 @@ import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.enums.ProcessStatusType;
 import com.levelout.web.enums.ProcessType;
 import com.levelout.web.model.ProcessModel;
+import com.levelout.web.model.RevisionModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.*;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.activation.DataHandler;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProcessService {
@@ -91,20 +92,61 @@ public class ProcessService {
         return processMap;
     }
 
-    public ProcessModel initSerialization(Long revisionId, String serializerName, long projectId) throws ServerException, UserException {
-        String query = "{\"doublebuffer\":true,\"defines\":{\"AllFields\":{\"includeAllFields\":true,\"includes\":" +
-                "[\"AllFields\",{\"type\":\"IfcProduct\",\"field\":\"geometry\",\"include\":{\"type\":\"GeometryInfo\"," +
-                "\"field\":\"data\",\"include\":{\"type\":\"GeometryData\",\"fields\":[\"indices\",\"vertices\"," +
-                "\"normals\",\"colorsQuantized\"]}}}]}},\"queries\":[{\"includeAllFields\":true,\"include\":" +
-                "\"AllFields\"}]}";
-        SSerializerPluginConfiguration serializer = bimServerClient.getServiceInterface().getSerializerByName(serializerName);
-        long topicId = bimServerClient
-                .getServiceInterface().download(new HashSet<>(Arrays.asList(revisionId)), query, serializer.getOid(), false);
-        return getProcessStatus(projectId, topicId);
+    public InputStream download(Long projectId, Long revisionId, String serializerName) throws ServerException, UserException, IOException {
+        try {
+            String query = "{\"doublebuffer\":true,\"defines\":{\"AllFields\":{\"includeAllFields\":true,\"includes\":" +
+                    "[\"AllFields\",{\"type\":\"IfcProduct\",\"field\":\"geometry\",\"include\":{\"type\":\"GeometryInfo\"," +
+                    "\"field\":\"data\",\"include\":{\"type\":\"GeometryData\",\"fields\":[\"indices\",\"vertices\"," +
+                    "\"normals\",\"colorsQuantized\"]}}}]}},\"queries\":[{\"includeAllFields\":true,\"include\":" +
+                    "\"AllFields\"}]}";
+            SSerializerPluginConfiguration serializer = bimServerClient
+                    .getPluginInterface()
+                    .getAllSerializers(true)
+                    .stream()
+                    .filter(sConfig->sConfig.getName().equalsIgnoreCase(serializerName))
+                    .findFirst().get();
+
+            long topicId = bimServerClient
+                    .getServiceInterface().download(new HashSet<>(Arrays.asList(revisionId)), query, serializer.getOid(), false);
+
+            getProcessStatus(projectId, topicId).getPercentage();
+            return bimServerClient.getDownloadData(topicId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
-    public DataHandler downloadSerialized(long topicId) throws ServerException, UserException {
-        return bimServerClient
-                .getServiceInterface().getDownloadData(topicId).getFile();
+    public Map<Long, List<ProcessModel>> getProgressTopics(Long projectId, List<RevisionModel> revisions) throws ServerException, UserException {
+        Map<Long, List<ProcessModel>> processMap = new HashMap<>();
+        revisions.stream().map(revisionModel -> {
+            try {
+                return bimServerClient.getRegistry().getProgressTopicsOnRevision(projectId, revisionModel.getRevisionId()).stream().map(topicId-> {
+                    try {
+                        ProcessModel processModel = getProcessStatus(projectId, topicId);
+                        processModel.setRevisionId(revisionModel.getRevisionId());
+                        return processModel;
+                    } catch (ServerException e) {
+                        throw new RuntimeException(e);
+                    } catch (UserException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).filter(processModel -> processModel.getPercentage()!=100).collect(Collectors.toList());
+            } catch (UserException e) {
+                throw new RuntimeException(e);
+            } catch (ServerException e) {
+                throw new RuntimeException(e);
+            }
+        }).flatMap(List::stream)
+                .forEach(processModel -> {
+                    List<ProcessModel> processesForRevision = processMap.get(processModel.getRevisionId());
+                    if(processesForRevision==null) {
+                        processesForRevision = new ArrayList<>();
+                        processMap.put(processModel.getRevisionId(), processesForRevision);
+                    }
+                    processesForRevision.add(processModel);
+                });
+
+        return processMap;
     }
 }

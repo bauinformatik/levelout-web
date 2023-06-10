@@ -13,15 +13,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.SSIPrefix;
-import org.bimserver.shared.exceptions.ServerException;
-import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.activation.DataHandler;
 import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -64,7 +62,6 @@ public class ProcessController {
     }
 
     private ResponseEntity<ProcessModel> checkInForSchema(String file, IfcSchema schema) throws Exception {
-        boolean isNew = false;
         TransactionDataModel transactionData = transactionDataService.getTransactionData();
         if(transactionData==null) {
             String fileNameWithOutExt = FilenameUtils.removeExtension(file);
@@ -102,18 +99,33 @@ public class ProcessController {
         );
     }
 
-    @PostMapping("/process/initSerialization/{revisionId}/{serializer}")
-    public ResponseEntity<ProcessModel> initSerialization(@PathVariable Long revisionId, @PathVariable String serializer) throws Exception {
-        return ResponseEntity.ok(processService.initSerialization(revisionId, serializer, transactionDataService.getProjectId()));
+    @PostMapping("/process/download/{revisionId}/{serializer}")
+    public ResponseEntity<String> download(
+            @PathVariable Long revisionId, @PathVariable String serializer, HttpServletResponse response
+    ) throws Exception {
+        TransactionDataModel transactionData = transactionDataService.getTransactionData();
+        InputStream inputStream = processService.download(transactionData.getProjectId(), revisionId, serializer);
+        byte[] dataArray = inputStream.readAllBytes();
+        response.setContentType(serializer);
+        response.setHeader("Content-Length", Long.toString(dataArray.length));
+        response.setHeader("Content-Disposition", "attachment; filename="
+                +projectService.getProjectById(transactionData.getProjectId()).getName()+".gml");
+        response.getOutputStream().write(dataArray);
+        return ResponseEntity.ok(CommonConstants.SUCCESS);
     }
 
-    @GetMapping("/process/download/{topicId}")
-    public void download(@PathVariable long topicId, HttpServletResponse response) throws Exception {
-        DataHandler dataHandler = processService.downloadSerialized(topicId);
-        byte[] dataArray = dataHandler.getInputStream().readAllBytes();
-        response.setContentType(dataHandler.getContentType());
-        response.setHeader("Content-Length", Long.toString(dataArray.length));
-        response.setHeader("Content-Disposition", "attachment; filename="+dataHandler.getName());
-        response.getOutputStream().write(dataArray);
+
+
+    @GetMapping("/process/progressTopics")
+    public ResponseEntity<Map<Long, List<ProcessModel>>> progressTopics(
+    ) throws Exception {
+        long projectId = transactionDataService.getTransactionData().getProjectId();
+        return ResponseEntity.ok(
+                processService.getProgressTopics(
+                        projectId,
+                        projectService.getAllRevisions(projectId)
+                )
+        );
     }
+
 }
