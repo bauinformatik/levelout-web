@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     ResponseEntity<?> handleControllerException(HttpServletRequest request, Throwable e) {
         HttpStatus status = getStatus(request);
+        e.printStackTrace();
         return new ResponseEntity<>(e instanceof UserException ? e.getMessage() : DEFAULT_ERROR_MESSAGE, status);
     }
 

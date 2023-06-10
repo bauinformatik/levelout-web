@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -119,6 +120,9 @@ public class ProcessController {
     @GetMapping("/process/progressTopics")
     public ResponseEntity<Map<Long, List<ProcessModel>>> progressTopics(
     ) throws Exception {
+        if(transactionDataService.getTransactionData()==null) {
+            return ResponseEntity.ok(new HashMap<>());
+        }
         long projectId = transactionDataService.getTransactionData().getProjectId();
         return ResponseEntity.ok(
                 processService.getProgressTopics(
