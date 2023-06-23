@@ -79,3 +79,15 @@ textarea {
     border: 1px solid #1c87c9;
     outline: none;
 }
+
+#overlay {
+    background-color: #ccc; /*or semitransparent image*/
+    display: none;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    opacity: 0.5;
+}

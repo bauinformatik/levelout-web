@@ -8,6 +8,9 @@
 </head>
 
 <body>
+<div id="overlay">
+	File is being downloaded. Thank you for your patience !!!!
+</div>
 <div style="text-align: center;">
 	<h1>
 		<a href="https://www.uni-weimar.de/en/university/news/bauhausjournal-online/titel/levelout-project-launch-indoor-and-outdoor-smart-navigation/" target="_blank">
@@ -151,6 +154,7 @@
 	}
 
 	function serializeAndDownload(revisionId, serializer) {
+		document.getElementById('overlay').style.display = 'block';
 		fetch(contextRoot+'/process/download/'+revisionId+'/'+serializer, {method: "post"})
 		.then(response => {
 			if (!response.ok) {
@@ -172,13 +176,21 @@
 				document.body.appendChild(a);
 				a.click();
 				window.URL.revokeObjectURL(url);
+				document.getElementById('overlay').style.display = 'none';
 				alert('Report: '+filename+' has downloaded!');
-			})
-		})
+			}).catch(err => {
+				document.getElementById('overlay').style.display = 'none';
+			 	alert(err.error);
+			});
+		}).catch(err => {
+			document.getElementById('overlay').style.display = 'none';
+			alert(err.error);
+		});
   	}
 
 	function downloadReport(reportId, title) {
-		fetch(contextRoot+'/project/download/report/'+reportId)
+	    document.getElementById('overlay').style.display = 'block';
+	    fetch(contextRoot+'/project/download/report/'+reportId)
 		.then(response => {
 			if (!response.ok) {
 			  throw new Error(response);
@@ -199,9 +211,16 @@
 				document.body.appendChild(a);
 				a.click();
 				window.URL.revokeObjectURL(url);
+				document.getElementById('overlay').style.display = 'none';
 				alert('Report: '+filename+' has downloaded!');
-			})
-		})
+			}).catch(err => {
+				document.getElementById('overlay').style.display = 'none';
+				alert(err.error);
+			});
+		}).catch(err => {
+			document.getElementById('overlay').style.display = 'none';
+			alert(err.error);
+		});
   	}
 	</script>
 </body>

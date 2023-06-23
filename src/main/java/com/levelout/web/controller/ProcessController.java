@@ -107,7 +107,7 @@ public class ProcessController {
         TransactionDataModel transactionData = transactionDataService.getTransactionData();
         InputStream inputStream = processService.download(transactionData.getProjectId(), revisionId, serializer);
         byte[] dataArray = inputStream.readAllBytes();
-        response.setContentType(serializer);
+        response.setContentType("application/gml+xml");
         response.setHeader("Content-Length", Long.toString(dataArray.length));
         response.setHeader("Content-Disposition", "attachment; filename="
                 +projectService.getProjectById(transactionData.getProjectId()).getName()+".gml");
