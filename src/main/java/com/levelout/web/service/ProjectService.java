@@ -97,6 +97,7 @@ public class ProjectService {
 
 	public List<RevisionModel> getAllRevisions(long projectId) throws ServerException, UserException {
 		List<SRevision> revisions = bimServerClient.getServiceInterface().getAllRevisionsOfProject(projectId);
+		Collections.reverse(revisions);
 		return revisions.stream().map(this::mapSRevisionToRevision).collect(Collectors.toList());
 	}
 
@@ -104,7 +105,7 @@ public class ProjectService {
 		RevisionModel revisionModel = new RevisionModel();
 		revisionModel.setRevisionId(sRevision.getOid());
 		revisionModel.setDescription(sRevision.getComment());
-
+		revisionModel.setDate(sRevision.getDate());
 		List<SExtendedData> services = schemaNames.stream().map(schemaName-> {
 			try {
 				return bimServerClient.getServiceInterface().getLastExtendedDataOfRevisionAndSchema(

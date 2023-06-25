@@ -1,10 +1,20 @@
 package com.levelout.web.model;
 
+import java.util.Date;
 import java.util.Map;
 
 public class RevisionModel {
 	long revisionId;
 	String description;
+	Date date;
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
+	}
 
 	Map<Long, String> reports;
 

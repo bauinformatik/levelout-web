@@ -9,7 +9,11 @@
 
 <body>
 <div id="overlay">
-	File is being downloaded. Thank you for your patience !!!!
+	<div id="overlay1">
+	</div>
+	<div id="popup">
+		<h2><p>File is being downloaded. Thank you for your patience !!!!</p></h2>
+	</div>
 </div>
 <div style="text-align: center;">
 	<h1>
@@ -19,7 +23,7 @@
 	</h1>
 </div>
 
-<h1><u>IFC</u></u></h1>
+<h1><u>IFC</u></h1>
 <div id="revisionUpload">
 	<input th:attr="id=|file_upload|" type="file" style="width: 200px"/>
 	<button name="button" value="OK" type="button" th:attr="onclick=|startUpload()|">Upload New Revision</button>
@@ -30,11 +34,12 @@
 </div>
 <div id="revisionsDetails">
 	<table>
-		<tr><th>Revision Description</th><th>Reports</th><th>Serialize&Download</th><th>Processes In Progress</th></tr>
+		<tr><th>Revision Description</th><th>Revision Created On</th><th>Reports</th><th>Serialize&Download</th><th>Processes In Progress</th></tr>
 
 		<th:block th:each="revision : ${revisions}">
 			<tr>
 				<td><p th:text="${revision.description}"></p></td>
+				<td><p th:text="${revision.date}"></p></td>
 				<td>
 					<div th:each="report : ${revision.reports}">
 						<button th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
@@ -65,6 +70,9 @@
 			method: "get"
 		})
 		.then(function(response) {
+		    if (!response.ok) {
+			  return response.text().then(text => { throw new Error(text); })
+			}
 			response.json().then(function(jsonMap){
 				let progressCount = 0;
 				for(var revisionId in jsonMap){
@@ -93,7 +101,10 @@
 					},1000);
         		}
 			})
-		})
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
 	}
 
 	setTimeout(function(){
@@ -107,6 +118,9 @@
 			method: "get"
 		})
 		.then(function(response) {
+		  if (!response.ok) {
+			  return response.text().then(text => { throw new Error(text); })
+		  }
 		  response.json().then(function(json){
 		  	if (json.percentage >= 100 && json.actionState.toString() == "FINISHED") {
 				console.log(json);
@@ -124,7 +138,10 @@
 				update(json);
 			}
 		  });
-		}).catch(err => alert(err.error));
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
 	}
 
 	function startUpload() {
@@ -134,11 +151,17 @@
 			method: "post"
 		})
 		.then(function(response) {
+		  if (!response.ok) {
+			return response.text().then(text => { throw new Error(text); })
+		  }
 		  response.json().then(function(json){
 		  	uploadFile(json);
 		  	update(json);
 		  });
-		}).catch(err => alert(err.error));
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
 	}
 
 	function uploadFile(data) {
@@ -150,7 +173,14 @@
 		fetch(contextRoot+"/process/checkIn/"+data.topicId, {
 			method: "post",
 			body: formData
-		}).catch(err => alert(err.error));
+		}).then(function(response) {
+		  if (!response.ok) {
+			return response.text().then(text => { throw new Error(text); })
+		  }
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
 	}
 
 	function serializeAndDownload(revisionId, serializer) {
@@ -158,8 +188,8 @@
 		fetch(contextRoot+'/process/download/'+revisionId+'/'+serializer, {method: "post"})
 		.then(response => {
 			if (!response.ok) {
-			  throw new Error(response);
-			}
+			  return response.text().then(text => { throw new Error(text); })
+		    }
 			// Extract filename from header
 			const filename = response.headers.get('content-disposition')
 			  .split(';')
@@ -180,11 +210,13 @@
 				alert('Report: '+filename+' has downloaded!');
 			}).catch(err => {
 				document.getElementById('overlay').style.display = 'none';
-			 	alert(err.error);
+				console.log('caught it!',err);
+				alert(err);
 			});
 		}).catch(err => {
 			document.getElementById('overlay').style.display = 'none';
-			alert(err.error);
+			console.log('caught it!',err);
+			alert(err);
 		});
   	}
 
@@ -193,7 +225,7 @@
 	    fetch(contextRoot+'/project/download/report/'+reportId)
 		.then(response => {
 			if (!response.ok) {
-			  throw new Error(response);
+			  return response.text().then(text => { throw new Error(text); })
 			}
 			// Extract filename from header
 			const filename = response.headers.get('content-disposition')
@@ -215,11 +247,13 @@
 				alert('Report: '+filename+' has downloaded!');
 			}).catch(err => {
 				document.getElementById('overlay').style.display = 'none';
-				alert(err.error);
+				console.log('caught it!',err);
+				alert(err);
 			});
 		}).catch(err => {
 			document.getElementById('overlay').style.display = 'none';
-			alert(err.error);
+			console.log('caught it!',err);
+			alert(err);
 		});
   	}
 	</script>
