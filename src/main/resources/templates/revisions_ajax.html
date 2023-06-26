@@ -12,7 +12,8 @@
 	<div id="overlay1">
 	</div>
 	<div id="popup">
-		<h2><p>File is being downloaded. Thank you for your patience !!!!</p></h2>
+		<div class="loader">
+		</div>
 	</div>
 </div>
 <div style="text-align: center;">
@@ -23,40 +24,36 @@
 	</h1>
 </div>
 
-<h1><u>IFC</u></h1>
 <div id="revisionUpload">
-	<input th:attr="id=|file_upload|" type="file" style="width: 200px"/>
-	<button name="button" value="OK" type="button" th:attr="onclick=|startUpload()|">Upload New Revision</button>
-
+	<div id="uploadButton">
+		<input th:attr="id=|file_upload|" type="file" style="width: 200px"/>
+		<button name="button" value="OK" type="button" th:attr="onclick=|startUpload()|">Upload New Revision</button>
+	</div>
 	<div th:attr="id=|progress_status|" class="progress_status">
+		<div th:attr="id=|progress_text|" class="progress_text"></div>
 		<div th:attr="id=|progress|" class="progress"></div>
 	</div>
 </div>
-<div id="revisionsDetails">
-	<table>
-		<tr><th>Revision Description</th><th>Revision Created On</th><th>Reports</th><th>Serialize&Download</th><th>Processes In Progress</th></tr>
-
-		<th:block th:each="revision : ${revisions}">
-			<tr>
-				<td><p th:text="${revision.description}"></p></td>
-				<td><p th:text="${revision.date}"></p></td>
-				<td>
-					<div th:each="report : ${revision.reports}">
-						<button th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
-					</div>
-				</td>
-				<td>
-					<div>
-						<button th:text="CityGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'CityGML')|" ></button>
-						<button th:text="IndoorGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'IndoorGML')|" ></button>
-						<button th:text="OSM" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'OSM')|" ></button>
-					</div>
-				</td>
-				<td th:attr="id=|processes_${revision.revisionId}|"></td>
-			</tr>
-		</th:block>
-	</table>
-</div>
+<table class="revisions">
+	<tr><th>IFC Upload</th><th>Upload Date</th><th>Checking</th><th>Conversion</th></tr>
+	<th:block th:each="revision : ${revisions}">
+		<tr>
+			<td><p th:text="${revision.description}"></p></td>
+			<td><p th:text="${revision.date}"></p></td>
+			<td>
+				<div th:attr="id=|processes_${revision.revisionId}|"></div>
+				<div th:each="report : ${revision.reports}">
+					<button class="downloadButton" th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
+				</div>
+			</td>
+			<td>
+				<button class="downloadButton" th:text="CityGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'CityGML')|" ></button>
+				<button class="downloadButton" th:text="IndoorGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'IndoorGML')|" ></button>
+				<button class="downloadButton" th:text="OSM" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'OSM')|" ></button>
+			</td>
+		</tr>
+	</th:block>
+</table>
 
 <script>
 	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
@@ -112,8 +109,14 @@
 	},1000);
 
 	function update(data) {
+		var uploadButton = document.getElementById("uploadButton");
 		var element = document.getElementById("progress");
+		var progressText = document.getElementById("progress_text");
+
+		uploadButton.style.display = "none";
 		element.style.display = "block";
+		progressText.style.display = "block";
+
 		fetch(contextRoot+"/process/status/"+data.topicId, {
 			method: "get"
 		})
@@ -125,16 +128,18 @@
 		  	if (json.percentage >= 100 && json.actionState.toString() == "FINISHED") {
 				console.log(json);
 				element.style.width =  "100%";
-				element.innerHTML = json.title + ":" + "100%";
+				progressText.innerHTML = json.title + ":" + "100%";
 				setTimeout(function(){
 					alert("Finished Uploading");
 					element.style.display = "none";
+					progressText.style.display = "none";
+					uploadButton.style.display = "block";
 					refreshPage();
 				},1000);
 			} else {
 				console.log(json);
 				element.style.width = json.percentage * 1 + "%";
-				element.innerHTML = json.title + ":" + json.percentage  + "%";
+				progressText.innerHTML = json.title + ":" + json.percentage  + "%";
 				update(json);
 			}
 		  });
@@ -207,7 +212,6 @@
 				a.click();
 				window.URL.revokeObjectURL(url);
 				document.getElementById('overlay').style.display = 'none';
-				alert('Report: '+filename+' has downloaded!');
 			}).catch(err => {
 				document.getElementById('overlay').style.display = 'none';
 				console.log('caught it!',err);
@@ -244,7 +248,6 @@
 				a.click();
 				window.URL.revokeObjectURL(url);
 				document.getElementById('overlay').style.display = 'none';
-				alert('Report: '+filename+' has downloaded!');
 			}).catch(err => {
 				document.getElementById('overlay').style.display = 'none';
 				console.log('caught it!',err);

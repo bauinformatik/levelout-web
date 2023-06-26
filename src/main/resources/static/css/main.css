@@ -10,15 +10,22 @@ h1{
 	color:#0000FF;
 }
 
-table {
-  border-collapse: collapse;
-  width: 100%;
-  border: 1px solid #ddd;
+
+.revisions {
+  border: none;
 }
 
-th, td {
+.revisions tr {
   text-align: left;
-  padding: 16px;
+  padding: 2px;
+  margin: 2px;
+}
+
+.revisions th, td {
+  text-align: left;
+  padding: 2px;
+  margin: 2px;
+
 }
 
 .progress_status {

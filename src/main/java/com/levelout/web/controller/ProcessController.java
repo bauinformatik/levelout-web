@@ -2,6 +2,7 @@ package com.levelout.web.controller;
 
 import com.levelout.web.constants.CommonConstants;
 import com.levelout.web.enums.IfcSchema;
+import com.levelout.web.model.DownloadStreamModel;
 import com.levelout.web.model.ProcessModel;
 import com.levelout.web.model.ProjectModel;
 import com.levelout.web.model.TransactionDataModel;
@@ -105,13 +106,12 @@ public class ProcessController {
             @PathVariable Long revisionId, @PathVariable String serializer, HttpServletResponse response
     ) throws Exception {
         TransactionDataModel transactionData = transactionDataService.getTransactionData();
-        InputStream inputStream = processService.download(transactionData.getProjectId(), revisionId, serializer);
-        byte[] dataArray = inputStream.readAllBytes();
-        response.setContentType("application/gml+xml");
-        response.setHeader("Content-Length", Long.toString(dataArray.length));
+        DownloadStreamModel downloadStream = processService.download(transactionData.getProjectId(), revisionId, serializer);
+        response.setContentType(downloadStream.getContentType());
+        response.setContentLength(downloadStream.getInputStream().available());
         response.setHeader("Content-Disposition", "attachment; filename="
-                +projectService.getProjectById(transactionData.getProjectId()).getName()+".gml");
-        response.getOutputStream().write(dataArray);
+                +projectService.getProjectById(transactionData.getProjectId()).getName()+"."+downloadStream.getExtension());
+        downloadStream.getInputStream().transferTo(response.getOutputStream());
         return ResponseEntity.ok(CommonConstants.SUCCESS);
     }
 

@@ -3,6 +3,7 @@ package com.levelout.web.service;
 import com.levelout.web.config.BimServerClientWrapper;
 import com.levelout.web.enums.ProcessStatusType;
 import com.levelout.web.enums.ProcessType;
+import com.levelout.web.model.DownloadStreamModel;
 import com.levelout.web.model.ProcessModel;
 import com.levelout.web.model.RevisionModel;
 import org.apache.commons.logging.Log;
@@ -92,7 +93,7 @@ public class ProcessService {
         return processMap;
     }
 
-    public InputStream download(Long projectId, Long revisionId, String serializerName) throws ServerException, UserException, IOException {
+    public DownloadStreamModel download(Long projectId, Long revisionId, String serializerName) throws ServerException, UserException, IOException {
         try {
             String query = "{\"doublebuffer\":true,\"defines\":{\"AllFields\":{\"includeAllFields\":true,\"includes\":" +
                     "[\"AllFields\",{\"type\":\"IfcProduct\",\"field\":\"geometry\",\"include\":{\"type\":\"GeometryInfo\"," +
@@ -108,9 +109,17 @@ public class ProcessService {
 
             long topicId = bimServerClient
                     .getServiceInterface().download(new HashSet<>(Arrays.asList(revisionId)), query, serializer.getOid(), false);
+            List<SParameter> parameters = bimServerClient.getPluginInterface().getPluginSettings(serializer.getOid())
+                    .getParameters();
 
-            getProcessStatus(projectId, topicId).getPercentage();
-            return bimServerClient.getDownloadData(topicId);
+            String contentType = parameters.stream()
+                    .filter(sParameter -> sParameter.getIdentifier().equalsIgnoreCase("contentType"))
+                    .map(parameter-> ((SStringType) parameter.getValue()).getValue()).findFirst().orElse("");
+            String extension = parameters.stream()
+                    .filter(sParameter -> sParameter.getIdentifier().equalsIgnoreCase("extension"))
+                    .map(parameter-> ((SStringType) parameter.getValue()).getValue()).findFirst().orElse("");
+
+            return new DownloadStreamModel(bimServerClient.getDownloadData(topicId), contentType, extension);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
