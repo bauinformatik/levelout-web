@@ -98,8 +98,8 @@ public class ProjectController {
     public ResponseEntity<String> downloadReport(@PathVariable Integer reportId, HttpServletResponse response) throws Exception {
         SFile reportData = projectService.getReportData(reportId);
         byte[] reportArray = reportData.getData();
+        response.setContentLength(reportArray.length);
         response.setContentType(reportData.getMime());
-        response.setHeader("Content-Length", Long.toString(reportArray.length));
         response.setHeader("Content-Disposition", "attachment; filename="+reportData.getFilename());
         response.getOutputStream().write(reportArray);
         return ResponseEntity.ok(CommonConstants.SUCCESS);

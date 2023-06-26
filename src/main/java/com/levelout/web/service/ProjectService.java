@@ -11,7 +11,6 @@ import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -143,25 +142,6 @@ public class ProjectService {
 		project.setSchema(IfcSchema.valueOf(sProject.getSchema()));
 		project.setExportLengthMeasurePrefix(sProject.getExportLengthMeasurePrefix());
 		return project;
-	}
-
-	/**
-	 * Cleans all the in progress topics at midnight CET time everyday
-	 *
-	 * @throws ServerException
-	 * @throws UserException
-	 */
-	@Scheduled(cron = "0 0 0 * * *", zone = "CET")
-	public void topicsCleanupAction() throws ServerException, UserException {
-//		bimServerClient.getRegistry().getProgressTopicsOnServer().forEach(topic-> {
-//			logger.error("Cleaning up started for topic: "+topic);
-//			try {
-//				bimServerClient.getServiceInterface().cleanupLongAction(topic);
-//				logger.error("Cleaning up successful for topic: "+topic);
-//			} catch (UserException | ServerException e) {
-//				e.printStackTrace();
-//			}
-//		});
 	}
 
 	public SFile getReportData(long reportId) throws ServerException, UserException {

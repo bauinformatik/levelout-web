@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,7 +46,11 @@ public class ProcessService {
 
     public ProcessModel getProcessStatus(long projectId, long topicId) throws ServerException, UserException {
         SLongActionState progress = bimServerClient.getRegistry().getProgress(topicId);
-        return mapToProcessDto(projectId, topicId, progress);
+        ProcessModel status = mapToProcessDto(projectId, topicId, progress);
+        if (status.getPercentage() >= 100 && status.getActionState().name().equalsIgnoreCase("FINISHED")) {
+            cleanupOnTopic(topicId);
+        }
+        return status;
     }
 
     private ProcessModel mapToProcessDto(long projectId, long topicId, SLongActionState progress) {
@@ -61,11 +64,6 @@ public class ProcessService {
         process.setTitle(progress==null?"PROCESS IN QUEUE":progress.getTitle());
         process.setRevisionId(progress==null?0L:progress.getRid());
         return process;
-    }
-
-    public void getProgress(Long projectId) throws Exception {
-        SProject project = bimServerClient.getServiceInterface().getProjectByPoid(projectId);
-        bimServerClient.getServiceInterface().cleanupLongAction(project.getLastRevisionId());
     }
 
     public Map<Long, List<ProcessModel>> getStatusOfProcessesForProject(Long projectId) throws ServerException, UserException {
@@ -119,7 +117,7 @@ public class ProcessService {
                     .filter(sParameter -> sParameter.getIdentifier().equalsIgnoreCase("extension"))
                     .map(parameter-> ((SStringType) parameter.getValue()).getValue()).findFirst().orElse("");
 
-            return new DownloadStreamModel(bimServerClient.getDownloadData(topicId), contentType, extension);
+            return new DownloadStreamModel(bimServerClient.getDownloadData(topicId), contentType, extension, topicId);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -157,5 +155,27 @@ public class ProcessService {
                 });
 
         return processMap;
+    }
+
+//    /**
+//     * Cleans all the in progress topics at midnight CET time everyday
+//     *
+//     * @throws ServerException
+//     * @throws UserException
+//     */
+//    @Scheduled(cron = "0 0 0 * * *", zone = "CET")
+//    public void topicsCleanupAction() throws ServerException, UserException {
+//        bimServerClient.getRegistry().getProgressTopicsOnServer().forEach(topic-> {
+//            cleanupOnTopic(topic);
+//        });
+//    }
+
+    /**
+     * Clean up of topic after download
+     *
+     * @param topic
+     */
+    public void cleanupOnTopic(Long topic) {
+        asyncCheckinService.cleanupOnTopic(topic);
     }
 }

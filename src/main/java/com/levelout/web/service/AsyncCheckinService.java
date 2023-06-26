@@ -35,4 +35,21 @@ public class AsyncCheckinService {
         }
         logger.info("Finished check-in process for the project: "+projectId);
     }
+
+    /**
+     * Clean up of topic after download
+     *
+     * @param topic
+     */
+    @Async
+    public void cleanupOnTopic(Long topic) {
+        logger.info("Cleaning up started for topic: "+ topic);
+        try {
+            bimServerClient.getServiceInterface().cleanupLongAction(topic);
+            logger.info("Cleaning up successful for topic: "+ topic);
+        } catch (UserException | ServerException e) {
+            logger.error("Cleaning up failed for topic: "+ topic);
+            e.printStackTrace();
+        }
+    }
 }

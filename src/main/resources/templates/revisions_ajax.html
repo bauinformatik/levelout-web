@@ -26,7 +26,7 @@
 
 <div id="revisionUpload">
 	<div id="uploadButton">
-		<input th:attr="id=|file_upload|" type="file" style="width: 200px"/>
+		<input th:attr="id=|file_upload|" type="file" style="width: 200px; border:none;"/>
 		<button name="button" value="OK" type="button" th:attr="onclick=|startUpload()|">Upload New Revision</button>
 	</div>
 	<div th:attr="id=|progress_status|" class="progress_status">
@@ -43,13 +43,13 @@
 			<td>
 				<div th:attr="id=|processes_${revision.revisionId}|"></div>
 				<div th:each="report : ${revision.reports}">
-					<button class="downloadButton" th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
+					<button th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
 				</div>
 			</td>
 			<td>
-				<button class="downloadButton" th:text="CityGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'CityGML')|" ></button>
-				<button class="downloadButton" th:text="IndoorGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'IndoorGML')|" ></button>
-				<button class="downloadButton" th:text="OSM" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'OSM')|" ></button>
+				<button th:text="CityGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'CityGML')|" ></button>
+				<button th:text="IndoorGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'IndoorGML')|" ></button>
+				<button th:text="OSM" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'OSM')|" ></button>
 			</td>
 		</tr>
 	</th:block>
@@ -201,6 +201,7 @@
 			  .find(n => n.includes('filename='))
 			  .replace('filename=', '')
 			  .trim();
+
 			response.blob().then(blob => {
 				const url = window.URL.createObjectURL(blob);
 				const a = document.createElement('a');

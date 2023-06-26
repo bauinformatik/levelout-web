@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,12 +85,6 @@ public class ProcessController {
         return ResponseEntity.ok(processService.getProcessStatus(transactionDataService.getTransactionData().getProjectId(), topicId));
     }
 
-    @GetMapping("/process/progress")
-    public ResponseEntity<String> getProcessTopicsForProject() throws Exception {
-        processService.getProgress(transactionDataService.getTransactionData().getProjectId());
-        return ResponseEntity.ok(CommonConstants.SUCCESS);
-    }
-
     @GetMapping("/process/services/status")
     public ResponseEntity<Map<Long, List<ProcessModel>>> getStatusForAll() throws Exception {
         return ResponseEntity.ok(
@@ -107,15 +100,15 @@ public class ProcessController {
     ) throws Exception {
         TransactionDataModel transactionData = transactionDataService.getTransactionData();
         DownloadStreamModel downloadStream = processService.download(transactionData.getProjectId(), revisionId, serializer);
+        byte[] dataArray = downloadStream.getInputStream().readAllBytes();
+        response.setContentLength(dataArray.length);
         response.setContentType(downloadStream.getContentType());
-        response.setContentLength(downloadStream.getInputStream().available());
         response.setHeader("Content-Disposition", "attachment; filename="
                 +projectService.getProjectById(transactionData.getProjectId()).getName()+"."+downloadStream.getExtension());
-        downloadStream.getInputStream().transferTo(response.getOutputStream());
+        response.getOutputStream().write(dataArray);
+        processService.cleanupOnTopic(downloadStream.getTopicId());
         return ResponseEntity.ok(CommonConstants.SUCCESS);
     }
-
-
 
     @GetMapping("/process/progressTopics")
     public ResponseEntity<Map<Long, List<ProcessModel>>> progressTopics(
