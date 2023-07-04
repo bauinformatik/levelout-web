@@ -47,7 +47,7 @@ public class ProcessService {
     public ProcessModel getProcessStatus(long projectId, long topicId) throws ServerException, UserException {
         SLongActionState progress = bimServerClient.getRegistry().getProgress(topicId);
         ProcessModel status = mapToProcessDto(projectId, topicId, progress);
-        if (status.getPercentage() >= 100 && status.getActionState().name().equalsIgnoreCase("FINISHED")) {
+        if (status.getPercentage() >= 100 && status.getActionState() == SActionState.FINISHED) {
             cleanupOnTopic(topicId);
         }
         return status;
@@ -91,7 +91,7 @@ public class ProcessService {
         return processMap;
     }
 
-    public DownloadStreamModel download(Long projectId, Long revisionId, String serializerName) throws ServerException, UserException, IOException {
+    public DownloadStreamModel download(Long revisionId, String serializerName) throws ServerException, UserException, IOException {
         try {
             String query = "{\"doublebuffer\":true,\"defines\":{\"AllFields\":{\"includeAllFields\":true,\"includes\":" +
                     "[\"AllFields\",{\"type\":\"IfcProduct\",\"field\":\"geometry\",\"include\":{\"type\":\"GeometryInfo\"," +
@@ -176,6 +176,13 @@ public class ProcessService {
      * @param topic
      */
     public void cleanupOnTopic(Long topic) {
-        asyncCheckinService.cleanupOnTopic(topic);
+        if(topic == null)
+            return;
+
+        try {
+            asyncCheckinService.cleanupOnTopic(topic);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

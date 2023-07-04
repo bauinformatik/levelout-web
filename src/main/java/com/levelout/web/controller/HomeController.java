@@ -1,7 +1,6 @@
 package com.levelout.web.controller;
 
 import com.levelout.web.constants.CommonConstants;
-import com.levelout.web.model.RevisionModel;
 import com.levelout.web.service.ProjectService;
 import com.levelout.web.service.TransactionDataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Controller
 public class HomeController {
@@ -29,7 +27,7 @@ public class HomeController {
 	ProjectService projectService;
 
 	@GetMapping("/")
-	public String home(Model model, @RequestParam(defaultValue = "") String initAction) {
+	public String root(Model model, @RequestParam(defaultValue = "") String initAction) {
 		try {
 			model.addAttribute("message", message);
 			model.addAttribute("initAction", initAction);
@@ -42,35 +40,12 @@ public class HomeController {
 		} catch (Exception e) {
 			return "error";
 		}
-		return "revisions_ajax";
+		return "revisions";
 	}
 
 	@GetMapping("/home")
-	public String home1(Model model) {
-		try {
-			model.addAttribute("message", message);
-		} catch (Exception e) {
-			return "error";
-		}
-		return "welcome";
-	}
-
-	@GetMapping("/project")
-	public String myProject(Model model) {
-		try {
-			Long projectId = transactionDataService.getProjectId();
-			List<RevisionModel> revisions = projectService.getAllRevisions(projectId);
-			model.addAttribute("message", message);
-
-			if(projectId==null || projectId==0)
-				return "welcome";
-
-			model.addAttribute("revisions", revisions);
-			model.addAttribute("projectId", projectId);
-		} catch (Exception e) {
-			return "error";
-		}
-		return "revisions";
+	public String home(Model model, @RequestParam(defaultValue = "") String initAction) {
+		return root(model, initAction);
 	}
 
 	// Added only for testing purpose.

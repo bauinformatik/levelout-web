@@ -99,12 +99,12 @@ public class ProcessController {
             @PathVariable Long revisionId, @PathVariable String serializer, HttpServletResponse response
     ) throws Exception {
         TransactionDataModel transactionData = transactionDataService.getTransactionData();
-        DownloadStreamModel downloadStream = processService.download(transactionData.getProjectId(), revisionId, serializer);
+        DownloadStreamModel downloadStream = processService.download(revisionId, serializer);
         byte[] dataArray = downloadStream.getInputStream().readAllBytes();
         response.setContentLength(dataArray.length);
         response.setContentType(downloadStream.getContentType());
         response.setHeader("Content-Disposition", "attachment; filename="
-                +projectService.getProjectById(transactionData.getProjectId()).getName()+"."+downloadStream.getExtension());
+                +projectService.getRevision(revisionId).getDescription()+"."+downloadStream.getExtension());
         response.getOutputStream().write(dataArray);
         processService.cleanupOnTopic(downloadStream.getTopicId());
         return ResponseEntity.ok(CommonConstants.SUCCESS);

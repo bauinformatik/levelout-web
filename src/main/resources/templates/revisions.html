@@ -1,69 +1,22 @@
 <!DOCTYPE HTML>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="utf-8">
-<meta name="viewport"
-	content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-<title>LevelOut-Web</title>
-
-<link rel="stylesheet" th:href="@{/css/main.css}" />
-<script>
-	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
-    function refreshPage(){
-        window.location.reload();
-    }
-
-	function update(data, elementId_suffix) {
-		var element = document.getElementById("progress_"+elementId_suffix);
-		element.style.display = "block";
-		fetch(contextRoot+"/process/status/"+data.projectId+"/"+data.topicId, {
-			method: "get"
-		})
-		.then(function(response) {
-		  response.json().then(function(json){
-		  	if (json.percentage >= 100 && json.actionState.toString() == "FINISHED") {
-				console.log(json);
-				element.style.width =  "100%";
-				element.innerHTML = json.title + ":" + "100%";
-				setTimeout(function(){
-					alert("Finished Uploading");
-					element.style.display = "none";
-					refreshPage();
-				},1000);
-			} else {
-				console.log(json);
-				element.style.width = json.percentage * 1 + "%";
-				element.innerHTML = json.title + ":" + json.percentage  + "%";
-				update(json, elementId_suffix);
-			}
-		  });
-		}).catch(err => console.error(err));
-	}
-
-	function hello(projectId) {
-		const inputFile = document.getElementById("file_"+projectId);
-		const formData = new FormData();
-		for (const file of inputFile.files) {
-			formData.append("file", file);
-		}
-		fetch(contextRoot+"/process/checkIn/"+projectId, {
-			method: "post",
-			body: formData
-		})
-		.then(function(response) {
-		  // response.json() returns a promise, use the same .then syntax to work with the results
-		  response.json().then(function(json){
-			console.log(": "+json.percentage);
-			update(json, projectId);
-		  });
-		}).catch(err => console.error(err));
-	}
-	</script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>LevelOut-Web</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}" />
 </head>
 
 <body>
-<div style="text-align: center;">
+<div id="overlay">
+	<div id="overlay1">
+	</div>
+	<div id="popup">
+		<div class="loader">
+		</div>
+	</div>
+</div>
+<div>
 	<h1>
 		<a href="https://www.uni-weimar.de/en/university/news/bauhausjournal-online/titel/levelout-project-launch-indoor-and-outdoor-smart-navigation/" target="_blank">
 			LEVELOUT
@@ -71,29 +24,245 @@
 	</h1>
 </div>
 
-<h1><u>IFC</u></u></h1>
-	<div>
-        <input th:attr="id=|file_${projectId}|" type="file" style="width: 200px"/>
-		<button name="button" value="OK" type="button"
-				th:attr="onclick=|hello('${projectId}')|">Upload New Revision</button>
-
-		<div th:attr="id=|progress_status_${projectId}|" class="progress_status">
-			<div th:attr="id=|progress_${projectId}|" class="progress"></div>
-		</div>
+<div id="revisionUpload">
+	<div id="uploadButton">
+		<input th:attr="id=|file_upload|" type="file" style="width: 200px; border:none;" accept=".IFC,.zip,.ifczip"/>
+		<button name="button" value="OK" type="button" th:attr="onclick=|startUpload()|">Upload IFC</button>
 	</div>
-	<table>
+	<div th:attr="id=|progress_status|" class="progress_status">
+		<div th:attr="id=|progress_text|" class="progress_text"></div>
+		<div class="progress_bg"><div th:attr="id=|progress|" class="progress"></div></div>
+	</div>
+</div>
+<table class="revisions">
+	<tr><th>IFC Upload</th><th>Upload Date</th><th>Checking</th><th>Conversion</th></tr>
+	<th:block th:each="revision : ${revisions}">
 		<tr>
-			<th>Revision ID</th>
-			<th>Revision Description</th>
+			<td><p th:text="${revision.description + '.' + revision.extension}"></p></td>
+			<td><p th:text="${revision.date}"></p></td>
+			<td>
+				<div th:attr="id=|loader_${revision.revisionId}|" class="loader_small"></div>
+				<div th:attr="id=|processes_${revision.revisionId}|"></div>
+				<div th:each="report : ${revision.reports}">
+					<button th:text="${report.value}" th:attr="onclick=|downloadReport('${report.key}', '${report.value}')|" ></button>
+				</div>
+			</td>
+			<td>
+				<button th:text="CityGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'CityGML')|" ></button>
+				<button th:text="IndoorGML" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'IndoorGML')|" ></button>
+				<button th:text="OSM" th:attr="onclick=|serializeAndDownload('${revision.revisionId}', 'OSM')|" ></button>
+			</td>
 		</tr>
-		<tr th:each="revision: ${revisions}">
-			<td th:text="${revision.revisionId}" />
-			<td th:text="${revision.description}" />
-		</tr>
-	</table>
-	<br/><br/><br/><br/>
-	<h1><u>Report</u></u></h1>
-	<br/><br/><br/><br/>
-	<h1><u>Map</u></u></h1>
+	</th:block>
+</table>
+
+<script>
+	var contextRoot = '[[@{/}]]'.replace(/\/$/, "");
+	function refreshPage(){
+        window.location.reload();
+    }
+
+	let previousProgressCount = -1;
+    function displayRunningProcesses() {
+		fetch(contextRoot+"/process/progressTopics", {
+			method: "get"
+		})
+		.then(function(response) {
+		    if (!response.ok) {
+			  return response.text().then(text => { throw new Error(text); })
+			}
+			response.json().then(function(jsonMap){
+				let progressCount = 0;
+				for(var revisionId in jsonMap){
+					var jsonArray = jsonMap[revisionId];
+					document.getElementById("loader_"+revisionId).style.display = 'inline-block';
+					var element = document.getElementById("processes_"+revisionId);
+					element.style.display = 'inline-block';
+					element.innerHTML = '';
+					for ( var i = 0; i < jsonArray.length; i++) {
+						++progressCount;
+						var json = jsonArray[i];
+						element.innerHTML = element.innerHTML + json.title + ':<b style="color:green;">' + json.percentage + '</b></br>';
+					}
+				}
+
+				if(previousProgressCount==-1) {
+					previousProgressCount = progressCount;
+				}
+
+				if (progressCount < previousProgressCount) {
+					refreshPage();
+					return;
+				}
+
+        		if(progressCount>0) {
+        			setTimeout(function(){
+						displayRunningProcesses();
+					},1000);
+        		}
+			})
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
+	}
+
+	setTimeout(function(){
+		displayRunningProcesses();
+	},1000);
+
+	function update(data) {
+		var uploadButton = document.getElementById("uploadButton");
+		var element = document.getElementById("progress");
+		var progressText = document.getElementById("progress_text");
+
+		uploadButton.style.display = "none";
+		element.style.display = "block";
+		progressText.style.display = "block";
+
+		fetch(contextRoot+"/process/status/"+data.topicId, {
+			method: "get"
+		})
+		.then(function(response) {
+		  if (!response.ok) {
+			  return response.text().then(text => { throw new Error(text); })
+		  }
+		  response.json().then(function(json){
+		  	if (json.percentage >= 100 && json.actionState.toString() == "FINISHED") {
+				console.log(json);
+				element.style.width =  "100%";
+				progressText.innerHTML = json.title + ":" + "100%";
+				setTimeout(function(){
+					alert("Finished Uploading");
+					element.style.display = "none";
+					progressText.style.display = "none";
+					uploadButton.style.display = "block";
+					refreshPage();
+				},1000);
+			} else {
+				console.log(json);
+				element.style.width = json.percentage * 1 + "%";
+				progressText.innerHTML = json.title + ":" + json.percentage  + "%";
+				update(json);
+			}
+		  });
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
+	}
+
+	function startUpload() {
+		const inputFile = document.getElementById("file_upload");
+		const encodedUrl = encodeURI("/process/prepareCheckIn?file="+inputFile.value);
+		fetch(contextRoot+encodedUrl, {
+			method: "post"
+		})
+		.then(function(response) {
+		  if (!response.ok) {
+			return response.text().then(text => { throw new Error(text); })
+		  }
+		  response.json().then(function(json){
+		  	uploadFile(json);
+		  	update(json);
+		  });
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
+	}
+
+	function uploadFile(data) {
+		const inputFile = document.getElementById("file_upload");
+		const formData = new FormData();
+		for (const file of inputFile.files) {
+			formData.append("file", file);
+		}
+		fetch(contextRoot+"/process/checkIn/"+data.topicId, {
+			method: "post",
+			body: formData
+		}).then(function(response) {
+		  if (!response.ok) {
+			return response.text().then(text => { throw new Error(text); })
+		  }
+		}).catch(err => {
+			console.log('caught it!',err);
+			alert(err);
+		});
+	}
+
+	function serializeAndDownload(revisionId, serializer) {
+		document.getElementById('overlay').style.display = 'block';
+		fetch(contextRoot+'/process/download/'+revisionId+'/'+serializer, {method: "post"})
+		.then(response => {
+			if (!response.ok) {
+			  return response.text().then(text => { throw new Error(text); })
+		    }
+			// Extract filename from header
+			const filename = response.headers.get('content-disposition')
+			  .split(';')
+			  .find(n => n.includes('filename='))
+			  .replace('filename=', '')
+			  .trim();
+
+			response.blob().then(blob => {
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.style.display = 'none';
+				a.href = url;
+				// the filename you want
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				window.URL.revokeObjectURL(url);
+				document.getElementById('overlay').style.display = 'none';
+			}).catch(err => {
+				document.getElementById('overlay').style.display = 'none';
+				console.log('caught it!',err);
+				alert(err);
+			});
+		}).catch(err => {
+			document.getElementById('overlay').style.display = 'none';
+			console.log('caught it!',err);
+			alert(err);
+		});
+  	}
+
+	function downloadReport(reportId, title) {
+	    document.getElementById('overlay').style.display = 'block';
+	    fetch(contextRoot+'/project/download/report/'+reportId)
+		.then(response => {
+			if (!response.ok) {
+			  return response.text().then(text => { throw new Error(text); })
+			}
+			// Extract filename from header
+			const filename = response.headers.get('content-disposition')
+			  .split(';')
+			  .find(n => n.includes('filename='))
+			  .replace('filename=', '')
+			  .trim();
+			response.blob().then(blob => {
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.style.display = 'none';
+				a.href = url;
+				// the filename you want
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				window.URL.revokeObjectURL(url);
+				document.getElementById('overlay').style.display = 'none';
+			}).catch(err => {
+				document.getElementById('overlay').style.display = 'none';
+				console.log('caught it!',err);
+				alert(err);
+			});
+		}).catch(err => {
+			document.getElementById('overlay').style.display = 'none';
+			console.log('caught it!',err);
+			alert(err);
+		});
+  	}
+	</script>
 </body>
 </html>

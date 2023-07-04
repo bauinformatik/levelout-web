@@ -8,6 +8,16 @@ public class RevisionModel {
 	String description;
 	Date date;
 
+	public String getExtension() {
+		return extension;
+	}
+
+	public void setExtension(String extension) {
+		this.extension = extension;
+	}
+
+	String extension;
+
 	public Date getDate() {
 		return date;
 	}

@@ -100,10 +100,17 @@ public class ProjectService {
 		return revisions.stream().map(this::mapSRevisionToRevision).collect(Collectors.toList());
 	}
 
+	public RevisionModel getRevision(long revisionId) throws ServerException, UserException {
+		SRevision revision = bimServerClient.getServiceInterface().getRevision(revisionId);
+		return this.mapSRevisionToRevision(revision);
+	}
+
 	private RevisionModel mapSRevisionToRevision(SRevision sRevision) {
 		RevisionModel revisionModel = new RevisionModel();
 		revisionModel.setRevisionId(sRevision.getOid());
-		revisionModel.setDescription(sRevision.getComment());
+		String[] fileNameExtension = getFileNameAndExtension(sRevision);
+		revisionModel.setDescription(fileNameExtension[0]);
+		revisionModel.setExtension( fileNameExtension[1]);
 		revisionModel.setDate(sRevision.getDate());
 		List<SExtendedData> services = schemaNames.stream().map(schemaName-> {
 			try {
@@ -132,6 +139,18 @@ public class ProjectService {
 						)
 		);
 		return revisionModel;
+	}
+
+	private String[] getFileNameAndExtension(SRevision sRevision) {
+		final String comment = sRevision.getComment();
+		int i = comment.lastIndexOf(".");
+		String fileNameWithoutExtension = i>0 ? comment.substring(0, i) : comment;
+
+		String extension = i>0 ? comment.substring(i+1).split(" ")[0] : "ifc";
+		if(extension.isEmpty())
+			extension = "ifc";
+
+		return new String[]{fileNameWithoutExtension, extension};
 	}
 
 	private ProjectModel mapSProjectToProject(SProject sProject) {

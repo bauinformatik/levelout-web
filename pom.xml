@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.levelout.web</groupId>
 	<artifactId>levelout-web</artifactId>
-	<version>0.8-SNAPSHOT</version>
+	<version>0.9-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>levelout-web</name>
 	<description>Web Interface for Levelout project</description>
