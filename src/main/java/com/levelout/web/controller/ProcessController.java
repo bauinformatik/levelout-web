@@ -11,6 +11,7 @@ import com.levelout.web.service.ProjectService;
 import com.levelout.web.service.TransactionDataService;
 import com.levelout.web.utils.DateTimeUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bimserver.interfaces.objects.SSIPrefix;
@@ -94,20 +95,18 @@ public class ProcessController {
         );
     }
 
-    @PostMapping("/process/download/{revisionId}/{serializer}")
-    public ResponseEntity<String> download(
+    @GetMapping("/process/download/{revisionId}/{serializer}")
+    public void download(
             @PathVariable Long revisionId, @PathVariable String serializer, HttpServletResponse response
     ) throws Exception {
         TransactionDataModel transactionData = transactionDataService.getTransactionData();
         DownloadStreamModel downloadStream = processService.download(revisionId, serializer);
-        byte[] dataArray = downloadStream.getInputStream().readAllBytes();
-        response.setContentLength(dataArray.length);
         response.setContentType(downloadStream.getContentType());
         response.setHeader("Content-Disposition", "attachment; filename="
                 +projectService.getRevision(revisionId).getDescription()+"."+downloadStream.getExtension());
-        response.getOutputStream().write(dataArray);
+        IOUtils.copy(downloadStream.getInputStream(), response.getOutputStream());
+        response.flushBuffer();
         processService.cleanupOnTopic(downloadStream.getTopicId());
-        return ResponseEntity.ok(CommonConstants.SUCCESS);
     }
 
     @GetMapping("/process/progressTopics")

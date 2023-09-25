@@ -8,6 +8,7 @@ import com.levelout.web.model.ProcessModel;
 import com.levelout.web.model.RevisionModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bimserver.database.queries.om.DefaultQueries;
 import org.bimserver.interfaces.objects.*;
 import org.bimserver.shared.exceptions.ServerException;
 import org.bimserver.shared.exceptions.UserException;
@@ -93,18 +94,13 @@ public class ProcessService {
 
     public DownloadStreamModel download(Long revisionId, String serializerName) throws ServerException, UserException, IOException {
         try {
-            String query = "{\"doublebuffer\":true,\"defines\":{\"AllFields\":{\"includeAllFields\":true,\"includes\":" +
-                    "[\"AllFields\",{\"type\":\"IfcProduct\",\"field\":\"geometry\",\"include\":{\"type\":\"GeometryInfo\"," +
-                    "\"field\":\"data\",\"include\":{\"type\":\"GeometryData\",\"fields\":[\"indices\",\"vertices\"," +
-                    "\"normals\",\"colorsQuantized\"]}}}]}},\"queries\":[{\"includeAllFields\":true,\"include\":" +
-                    "\"AllFields\"}]}";
+            String query = DefaultQueries.allAsString();
             SSerializerPluginConfiguration serializer = bimServerClient
                     .getPluginInterface()
                     .getAllSerializers(true)
                     .stream()
                     .filter(sConfig->sConfig.getName().equalsIgnoreCase(serializerName))
                     .findFirst().get();
-
             long topicId = bimServerClient
                     .getServiceInterface().download(new HashSet<>(Arrays.asList(revisionId)), query, serializer.getOid(), false);
             List<SParameter> parameters = bimServerClient.getPluginInterface().getPluginSettings(serializer.getOid())
